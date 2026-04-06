@@ -2415,69 +2415,41 @@ async function submitRoundResult() {
   if (s.firstBlood) params.set('firstBlood', s.firstBlood);
   if (s.spiked) params.set('spiked', s.spiked);
 
-  try {
-    const resp = await fetch(APPS_SCRIPT_URL + '?' + params.toString());
-    const result = await resp.json();
-    if (result.success) {
-      // Optimistic update
-      let rd = roundsData.find(d => d.round === s.round);
-      if (rd) {
-        rd.teammate = s.teammate;
-        PLAYERS.forEach(p => { rd.placements[p] = placements[p]; });
-        rd.groomSlayer = s.groomSlayer;
-        rd.ringerSlayer = s.ringerSlayer;
-        rd.firstBlood = s.firstBlood;
-        rd.spiked = s.spiked;
-      }
-      closeWizard();
-      window._lastRefresh = Date.now() + 8000;
-      renderAll();
-      setTimeout(refreshData, 4000);
-    } else {
-      btn.textContent = 'Failed - Try Again';
-      btn.disabled = false;
-    }
-  } catch (err) {
-    // Fallback: iframe form POST
-    const formData = { action: 'roundResult', round: s.round };
-    if (s.teammate) formData.teammate = s.teammate;
-    PLAYERS.forEach(p => { formData['place_' + p] = placements[p]; });
-    if (s.groomSlayer) formData.groomSlayer = s.groomSlayer;
-    if (s.ringerSlayer) formData.ringerSlayer = s.ringerSlayer;
-    if (s.firstBlood) formData.firstBlood = s.firstBlood;
-    if (s.spiked) formData.spiked = s.spiked;
+  // Use iframe form POST to avoid CORS issues with Apps Script redirects
+  const formData = {};
+  params.forEach((v, k) => { formData[k] = v; });
 
-    const iframe = document.createElement('iframe');
-    iframe.name = 'round-frame-' + Date.now();
-    iframe.style.display = 'none';
-    document.body.appendChild(iframe);
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = APPS_SCRIPT_URL;
-    form.target = iframe.name;
-    Object.entries(formData).forEach(([k, v]) => {
-      const input = document.createElement('input');
-      input.type = 'hidden'; input.name = k; input.value = v;
-      form.appendChild(input);
-    });
-    document.body.appendChild(form);
-    form.submit();
+  const iframe = document.createElement('iframe');
+  iframe.name = 'round-frame-' + Date.now();
+  iframe.style.display = 'none';
+  document.body.appendChild(iframe);
+  const form = document.createElement('form');
+  form.method = 'POST';
+  form.action = APPS_SCRIPT_URL;
+  form.target = iframe.name;
+  Object.entries(formData).forEach(([k, v]) => {
+    const input = document.createElement('input');
+    input.type = 'hidden'; input.name = k; input.value = v;
+    form.appendChild(input);
+  });
+  document.body.appendChild(form);
+  form.submit();
 
-    // Optimistic update
-    let rd = roundsData.find(d => d.round === s.round);
-    if (rd) {
-      PLAYERS.forEach(p => { rd.placements[p] = placements[p]; });
-      rd.groomSlayer = s.groomSlayer;
-      rd.ringerSlayer = s.ringerSlayer;
-      rd.firstBlood = s.firstBlood;
-      rd.spiked = s.spiked;
-    }
-    closeWizard();
-    window._lastRefresh = Date.now() + 8000;
-    renderAll();
-    setTimeout(() => { form.remove(); iframe.remove(); }, 3000);
-    setTimeout(refreshData, 5000);
+  // Optimistic update
+  let rd = roundsData.find(d => d.round === s.round);
+  if (rd) {
+    rd.teammate = s.teammate;
+    PLAYERS.forEach(p => { rd.placements[p] = placements[p]; });
+    rd.groomSlayer = s.groomSlayer;
+    rd.ringerSlayer = s.ringerSlayer;
+    rd.firstBlood = s.firstBlood;
+    rd.spiked = s.spiked;
   }
+  closeWizard();
+  window._lastRefresh = Date.now() + 8000;
+  renderAll();
+  setTimeout(() => { form.remove(); iframe.remove(); }, 3000);
+  setTimeout(refreshData, 5000);
 }
 
 // --- Identity ---
