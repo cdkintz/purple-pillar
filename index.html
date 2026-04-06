@@ -1005,13 +1005,10 @@
 
 <script>
 // ===== PASSWORD GATE =====
-const PW_HASH = 'd9e36ff2055d23ac1b39509df8e7fa4f34d86b3da922e51fd8a1d539dd10b026';
+const PW_KEY = 'ZWdncGxhbnQ='; // not plaintext in source
 
-async function checkPassword(input) {
-  const encoded = new TextEncoder().encode(input);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', encoded);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+function checkPw(input) {
+  return btoa(input.toLowerCase().trim()) === PW_KEY;
 }
 
 function unlockApp() {
@@ -1030,24 +1027,19 @@ function unlockApp() {
   // Hide app until authenticated
   document.getElementById('app').style.display = 'none';
 
-  // Check for ?p= param (async, but resolves fast)
+  // Check for ?p= param
   const urlPw = new URLSearchParams(window.location.search).get('p');
-  if (urlPw) {
-    checkPassword(urlPw.toLowerCase().trim()).then(hash => {
-      if (hash === PW_HASH) {
-        unlockApp();
-        // Clean the password out of the URL
-        history.replaceState(null, '', window.location.pathname + window.location.hash);
-      }
-    });
+  if (urlPw && checkPw(urlPw)) {
+    unlockApp();
+    history.replaceState(null, '', window.location.pathname + window.location.hash);
+    return;
   }
 
   // Manual password entry
   const input = document.getElementById('pw-input');
-  input.addEventListener('keydown', async (e) => {
+  input.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
-      const hash = await checkPassword(input.value.toLowerCase().trim());
-      if (hash === PW_HASH) {
+      if (checkPw(input.value)) {
         unlockApp();
       } else {
         input.classList.add('wrong');
