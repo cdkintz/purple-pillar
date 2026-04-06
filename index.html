@@ -2235,9 +2235,10 @@ function renderBonusStep() {
 
   bonuses.forEach(b => {
     const current = s[b.key];
+    const isRequired = b.key === 'firstBlood';
     html += `<div class="card" style="margin-bottom:10px">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-        <span style="color:${b.color};font-weight:700;font-size:14px">${b.label}</span>
+        <span style="color:${b.color};font-weight:700;font-size:14px">${b.label}${isRequired ? ' *' : ''}</span>
         <span style="color:var(--muted);font-size:12px">${b.sub}</span>
       </div>
       <div style="display:flex;flex-wrap:wrap;gap:6px">
@@ -2245,15 +2246,19 @@ function renderBonusStep() {
           const sel = current === p ? 'selected' : '';
           return `<button class="bonus-player-btn ${sel}" onclick="toggleBonus('${b.key}','${p}')">${p}</button>`;
         }).join('')}
-        <button class="bonus-player-btn ${!current ? 'selected' : ''}" onclick="toggleBonus('${b.key}','')">None</button>
+        ${!isRequired ? `<button class="bonus-player-btn ${!current ? 'selected' : ''}" onclick="toggleBonus('${b.key}','')">None</button>` : ''}
       </div>
     </div>`;
   });
 
+  const canAdvance = !!s.firstBlood;
   html += `<div class="wizard-nav">
     <button class="wizard-btn wizard-btn-back" onclick="wizardBack()">Back</button>
-    <button class="wizard-btn wizard-btn-next" onclick="wizardNext()">Next: Review</button>
+    <button class="wizard-btn wizard-btn-next" ${canAdvance ? '' : 'disabled'} onclick="wizardNext()">Next: Review</button>
   </div>`;
+  if (!canAdvance) {
+    html += `<div style="text-align:center;color:var(--muted);font-size:15px;margin-top:12px">Select First Blood to continue</div>`;
+  }
 
   return html;
 }
@@ -2321,7 +2326,12 @@ function undoElim() {
 }
 
 function toggleBonus(key, player) {
-  wizardState[key] = wizardState[key] === player ? '' : player;
+  if (key === 'firstBlood') {
+    // First Blood is required — tapping sets it, can't clear
+    wizardState[key] = player;
+  } else {
+    wizardState[key] = wizardState[key] === player ? '' : player;
+  }
   renderWizard();
 }
 
