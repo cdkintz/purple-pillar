@@ -1124,17 +1124,8 @@
 
 <!-- MAIN APP -->
 <div id="app">
-  <div class="header">
-    <h1 style="line-height:1.2;font-size:14px">🍆 Celebrate Great Zeng's 🍆<br><span style="font-size:0.85em">🍆 庆祝曾伟大的紫色长轴 🍆</span></h1>
-    <div class="header-actions">
-      <span class="identity-badge" id="identity-badge" style="display:none"></span>
-      <div class="status-bar">
-        <div class="status-dot" id="status-dot"></div>
-        <span id="status-text">Connected</span>
-      </div>
-      <button class="refresh-btn" id="refresh-btn" onclick="refreshData()">&#x21bb;</button>
-      <a class="settings-btn" href="https://docs.google.com/spreadsheets/d/1-Enq2ClPrx2ZcIbMvRE0mqspB4152LKbL0mDHp3etWs/edit" target="_blank" style="text-decoration:none">Sheet</a>
-    </div>
+  <div class="header" style="justify-content:center;padding:16px 16px 14px">
+    <h1 style="line-height:1.3;font-size:16px;text-align:center;white-space:nowrap">🍆 Celebrate Great Zeng's 🍆<br><span style="font-size:0.85em">🍆 庆祝曾伟大的紫色长轴 🍆</span></h1>
   </div>
 
   <div class="main">
@@ -1244,6 +1235,32 @@
         </div>
       </div>
     </div>
+
+    <!-- SETTINGS VIEW -->
+    <div class="view" id="view-settings">
+      <div class="card">
+        <div class="card-title">Player Identity</div>
+        <div style="display:flex;align-items:center;gap:10px;padding:8px 0">
+          <span style="font-size:15px;color:var(--muted)">Logged in as:</span>
+          <span class="identity-badge" id="identity-badge" style="display:inline-block;font-size:15px;padding:6px 14px"></span>
+        </div>
+        <button style="margin-top:8px;padding:12px 20px;border-radius:10px;background:var(--card-border);color:var(--text);border:none;font-size:15px;font-weight:600;cursor:pointer" onclick="changeIdentity()">Change Player</button>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Connection</div>
+        <div style="display:flex;align-items:center;gap:10px;padding:8px 0">
+          <div class="status-dot" id="status-dot"></div>
+          <span id="status-text" style="font-size:15px">Connected</span>
+        </div>
+        <button class="refresh-btn" id="refresh-btn" onclick="refreshData()" style="margin-top:8px;padding:12px 20px;font-size:15px;width:100%">&#x21bb; Refresh Data</button>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Data</div>
+        <a href="https://docs.google.com/spreadsheets/d/1-Enq2ClPrx2ZcIbMvRE0mqspB4152LKbL0mDHp3etWs/edit" target="_blank" style="display:block;padding:14px 20px;border-radius:10px;background:var(--card-border);color:var(--text);text-decoration:none;font-size:15px;font-weight:600;text-align:center">Open Google Sheet ↗</a>
+      </div>
+    </div>
   </div>
 
   <!-- TAB BAR -->
@@ -1263,6 +1280,10 @@
     <button class="tab" onclick="switchTab('rules')">
       <span class="tab-icon">&#128214;</span>
       <span>Rules</span>
+    </button>
+    <button class="tab" onclick="switchTab('settings')">
+      <span class="tab-icon">&#9881;</span>
+      <span>Settings</span>
     </button>
   </div>
 </div>
@@ -2475,14 +2496,11 @@ function setIdentity(player) {
 
 function updateIdentityBadge() {
   const badge = document.getElementById('identity-badge');
-  if (currentPlayer) {
-    badge.textContent = currentPlayer;
-    badge.style.display = 'inline-block';
-    badge.style.cursor = 'pointer';
-    badge.onclick = showIdentityPicker;
-  } else {
-    badge.style.display = 'none';
-  }
+  badge.textContent = currentPlayer || 'Not set';
+}
+
+function changeIdentity() {
+  showIdentityPicker();
 }
 
 // --- Navigation ---
@@ -2491,19 +2509,19 @@ function switchTab(tab) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
 
-  const views = ['leaderboard', 'rounds', 'draft', 'rules'];
+  const views = ['leaderboard', 'rounds', 'draft', 'rules', 'settings'];
   const idx = views.indexOf(tab);
   document.querySelectorAll('.tab')[idx].classList.add('active');
   document.getElementById(`view-${tab}`).classList.add('active');
 
   // Update URL hash without triggering hashchange
-  const hashMap = { leaderboard: 'scores', rounds: 'rounds', draft: 'draft', rules: 'rules' };
+  const hashMap = { leaderboard: 'scores', rounds: 'rounds', draft: 'draft', rules: 'rules', settings: 'settings' };
   history.replaceState(null, '', '#' + hashMap[tab]);
 }
 
 function getTabFromHash() {
   const hash = location.hash.replace('#', '').toLowerCase();
-  const map = { scores: 'leaderboard', rounds: 'rounds', draft: 'draft', rules: 'rules' };
+  const map = { scores: 'leaderboard', rounds: 'rounds', draft: 'draft', rules: 'rules', settings: 'settings' };
   return map[hash] || null;
 }
 
