@@ -1259,6 +1259,15 @@
         <div class="card-title">Data</div>
         <a href="https://docs.google.com/spreadsheets/d/1-Enq2ClPrx2ZcIbMvRE0mqspB4152LKbL0mDHp3etWs/edit" target="_blank" style="display:block;padding:14px 20px;border-radius:10px;background:var(--card-border);color:var(--text);text-decoration:none;font-size:15px;font-weight:600;text-align:center">Open Google Sheet ↗</a>
       </div>
+
+      <div class="card">
+        <div class="card-title">Reset Data</div>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:12px">Clear data from the Google Sheet. This cannot be undone.</p>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <button style="padding:14px 20px;border-radius:10px;background:rgba(255,71,87,0.15);color:var(--red);border:2px solid var(--red);font-size:15px;font-weight:600;cursor:pointer" onclick="clearRounds()">Clear Scores & Rounds</button>
+          <button style="padding:14px 20px;border-radius:10px;background:rgba(255,71,87,0.15);color:var(--red);border:2px solid var(--red);font-size:15px;font-weight:600;cursor:pointer" onclick="clearDraft()">Clear Draft</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -2555,6 +2564,54 @@ function updateIdentityBadge() {
 
 function changeIdentity() {
   showIdentityPicker();
+}
+
+function clearRounds() {
+  if (!confirm('Clear all scores and round results? This cannot be undone.')) return;
+  if (!confirm('Are you really sure? All round data will be wiped.')) return;
+  const params = new URLSearchParams({ action: 'clearRounds' });
+  submitViaIframe(params);
+  // Clear local data
+  roundsData.forEach(rd => {
+    rd.teammate = '';
+    rd.groomSlayer = '';
+    rd.ringerSlayer = '';
+    rd.firstBlood = '';
+    rd.spiked = '';
+    PLAYERS.forEach(p => { rd.placements[p] = null; rd.chars[p] = ''; });
+  });
+  renderAll();
+  setTimeout(refreshData, 3000);
+}
+
+function clearDraft() {
+  if (!confirm('Clear all draft picks? This cannot be undone.')) return;
+  if (!confirm('Are you really sure? All draft data will be wiped.')) return;
+  const params = new URLSearchParams({ action: 'clearDraft' });
+  submitViaIframe(params);
+  // Clear local data
+  draftData.forEach(d => { d.character = ''; });
+  renderAll();
+  setTimeout(refreshData, 3000);
+}
+
+function submitViaIframe(params) {
+  const iframe = document.createElement('iframe');
+  iframe.name = 'clear-frame-' + Date.now();
+  iframe.style.display = 'none';
+  document.body.appendChild(iframe);
+  const form = document.createElement('form');
+  form.method = 'POST';
+  form.action = APPS_SCRIPT_URL;
+  form.target = iframe.name;
+  params.forEach((v, k) => {
+    const input = document.createElement('input');
+    input.type = 'hidden'; input.name = k; input.value = v;
+    form.appendChild(input);
+  });
+  document.body.appendChild(form);
+  form.submit();
+  setTimeout(() => { form.remove(); iframe.remove(); }, 3000);
 }
 
 // --- Navigation ---
