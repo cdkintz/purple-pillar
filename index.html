@@ -1968,6 +1968,38 @@ function renderDraft() {
       <div class="draft-progress">${pips}</div>
     </div>`;
 
+  // Character pools summary (at the top for easy reference)
+  const pools = {};
+  PLAYERS.forEach(p => { pools[p] = []; });
+  draftData.forEach(d => {
+    if (pools[d.player] !== undefined && d.character) {
+      pools[d.player].push(d.character);
+    }
+  });
+
+  html += `<div class="card">
+    <div class="card-title">Character Pools</div>
+    <div class="draft-grid">`;
+  html += PLAYERS.map(p => {
+    const chars = pools[p];
+    const isOnClock = p === currentPickPlayer && !draftComplete;
+    const charHtml = [0, 1, 2].map(i => {
+      const c = chars[i];
+      return c
+        ? `<span class="draft-char">${c}</span>`
+        : `<span class="draft-char empty">--</span>`;
+    }).join('');
+    const tag = PLAYER_TAGS[p]
+      ? `<span class="lb-tag tag-${PLAYER_TAGS[p]}" style="font-size:9px">Bachelor</span>`
+      : '';
+    const clockStyle = isOnClock ? 'border-color: var(--green); box-shadow: 0 0 12px rgba(46,213,115,0.2)' : '';
+    return `<div class="draft-player-card" style="${clockStyle}">
+      <div class="draft-player-name">${p} ${tag}</div>
+      <div class="draft-chars">${charHtml}</div>
+    </div>`;
+  }).join('');
+  html += '</div></div>';
+
   // If it's your turn, show the character picker
   if (isMyTurn) {
     const drafted = new Set(draftData.map(d => d.character).filter(Boolean));
@@ -2007,38 +2039,6 @@ function renderDraft() {
     }
   }
   html += '</ul></div>';
-
-  // Character pools summary
-  const pools = {};
-  PLAYERS.forEach(p => { pools[p] = []; });
-  draftData.forEach(d => {
-    if (pools[d.player] !== undefined && d.character) {
-      pools[d.player].push(d.character);
-    }
-  });
-
-  html += `<div class="card">
-    <div class="card-title">Character Pools</div>
-    <div class="draft-grid">`;
-  html += PLAYERS.map(p => {
-    const chars = pools[p];
-    const isOnClock = p === currentPickPlayer && !draftComplete;
-    const charHtml = [0, 1, 2].map(i => {
-      const c = chars[i];
-      return c
-        ? `<span class="draft-char">${c}</span>`
-        : `<span class="draft-char empty">--</span>`;
-    }).join('');
-    const tag = PLAYER_TAGS[p]
-      ? `<span class="lb-tag tag-${PLAYER_TAGS[p]}" style="font-size:9px">Bachelor</span>`
-      : '';
-    const clockStyle = isOnClock ? 'border-color: var(--green); box-shadow: 0 0 12px rgba(46,213,115,0.2)' : '';
-    return `<div class="draft-player-card" style="${clockStyle}">
-      <div class="draft-player-name">${p} ${tag}</div>
-      <div class="draft-chars">${charHtml}</div>
-    </div>`;
-  }).join('');
-  html += '</div></div>';
 
   el.innerHTML = html;
 
