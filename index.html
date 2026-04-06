@@ -2117,7 +2117,8 @@ async function pickTeammate(player) {
 
 let wizardState = {
   round: null,
-  step: 0, // 0=elimination, 1=bonuses, 2=review
+  step: 0, // 0=teammate, 1=elimination, 2=bonuses, 3=review
+  teammate: '',
   elimOrder: [], // players in order of elimination (first = 5th place)
   firstBlood: '',
   groomSlayer: '',
@@ -2129,6 +2130,7 @@ function openWizard(round) {
   wizardState = {
     round,
     step: 0,
+    teammate: '',
     elimOrder: [],
     firstBlood: '',
     groomSlayer: '',
@@ -2153,21 +2155,59 @@ function renderWizard() {
   </div>`;
 
   if (s.step === 0) {
-    html += renderElimStep();
+    html += renderTeammateStep();
   } else if (s.step === 1) {
-    html += renderBonusStep();
+    html += renderElimStep();
   } else if (s.step === 2) {
+    html += renderBonusStep();
+  } else if (s.step === 3) {
     html += renderReviewStep();
   }
 
   el.innerHTML = html;
 }
 
+function renderTeammateStep() {
+  const s = wizardState;
+  const teammates = PLAYERS.filter(p => p !== 'Steven');
+
+  let html = `<div class="wizard-step-label">Step 1 of 4</div>
+    <div class="wizard-step-title">Steven's Teammate</div>
+    <div class="wizard-step-sub">Who was on Steven's team this round?</div>`;
+
+  html += '<ul class="elim-list">';
+  teammates.forEach(p => {
+    const sel = s.teammate === p ? 'selected' : '';
+    html += `<li class="elim-item ${sel}" onclick="setTeammate('${p}')" style="${s.teammate === p ? 'border-color:var(--primary);background:rgba(180,74,223,0.15)' : ''}">
+      <span class="elim-badge" style="${s.teammate === p ? 'background:var(--primary);color:#fff' : ''}">${s.teammate === p ? '✓' : ''}</span>
+      <span>${p}</span>
+      ${s.teammate === p ? '<span style="color:var(--primary);font-size:14px;margin-left:auto;font-weight:700">Selected</span>' : ''}
+    </li>`;
+  });
+  html += '</ul>';
+
+  const canAdvance = !!s.teammate;
+  html += `<div class="wizard-nav">
+    <button class="wizard-btn wizard-btn-back" onclick="closeWizard()">Cancel</button>
+    <button class="wizard-btn wizard-btn-next" ${canAdvance ? '' : 'disabled'} onclick="wizardNext()">Next: Eliminations</button>
+  </div>`;
+  if (!canAdvance) {
+    html += `<div style="text-align:center;color:var(--muted);font-size:15px;margin-top:12px">Select a teammate to continue</div>`;
+  }
+
+  return html;
+}
+
+function setTeammate(player) {
+  wizardState.teammate = player;
+  renderWizard();
+}
+
 function renderElimStep() {
   const s = wizardState;
   const remaining = PLAYERS.filter(p => !s.elimOrder.includes(p));
 
-  let html = `<div class="wizard-step-label">Step 1 of 3</div>
+  let html = `<div class="wizard-step-label">Step 2 of 4</div>
     <div class="wizard-step-title">Elimination Order</div>
     <div class="wizard-step-sub">Tap players in the order they were eliminated (first out = 5th place)</div>`;
 
@@ -2211,7 +2251,7 @@ function renderElimStep() {
 
   const allAssigned = s.elimOrder.length >= 4; // 4 eliminated = 1 winner
   html += `<div class="wizard-nav">
-    <button class="wizard-btn wizard-btn-back" onclick="closeWizard()">Cancel</button>
+    <button class="wizard-btn wizard-btn-back" onclick="wizardBack()">Back</button>
     <button class="wizard-btn wizard-btn-next" ${allAssigned ? '' : 'disabled'} onclick="wizardNext()">Next: Bonuses</button>
   </div>`;
 
@@ -2222,7 +2262,7 @@ function renderBonusStep() {
   const s = wizardState;
   const allPlayers = PLAYERS;
 
-  let html = `<div class="wizard-step-label">Step 2 of 3</div>
+  let html = `<div class="wizard-step-label">Step 3 of 4</div>
     <div class="wizard-step-title">Bonuses & Penalties</div>
     <div class="wizard-step-sub">Tap to assign (tap again to clear)</div>`;
 
@@ -2272,9 +2312,18 @@ function renderReviewStep() {
 
   const sorted = PLAYERS.slice().sort((a, b) => placements[a] - placements[b]);
 
-  let html = `<div class="wizard-step-label">Step 3 of 3</div>
+  let html = `<div class="wizard-step-label">Step 4 of 4</div>
     <div class="wizard-step-title">Confirm Results</div>
     <div class="wizard-step-sub">Round ${s.round}</div>`;
+
+  html += `<div class="card"><div class="card-title">Team</div>
+    <div class="wizard-review-row">
+      <span style="font-weight:600">Steven</span>
+      <span style="color:var(--muted)">&</span>
+      <span style="font-weight:600">${s.teammate}</span>
+      <span style="color:var(--primary);font-size:14px;margin-left:auto">👊 Teammates</span>
+    </div>
+  </div>`;
 
   html += '<div class="card"><div class="card-title">Placements</div>';
   sorted.forEach(p => {
@@ -2357,6 +2406,7 @@ async function submitRoundResult() {
   placements[winner] = 1;
 
   const params = new URLSearchParams({ action: 'roundResult', round: s.round });
+  if (s.teammate) params.set('teammate', s.teammate);
   PLAYERS.forEach(p => {
     params.set('place_' + p, placements[p]);
   });
@@ -2372,6 +2422,7 @@ async function submitRoundResult() {
       // Optimistic update
       let rd = roundsData.find(d => d.round === s.round);
       if (rd) {
+        rd.teammate = s.teammate;
         PLAYERS.forEach(p => { rd.placements[p] = placements[p]; });
         rd.groomSlayer = s.groomSlayer;
         rd.ringerSlayer = s.ringerSlayer;
@@ -2389,6 +2440,7 @@ async function submitRoundResult() {
   } catch (err) {
     // Fallback: iframe form POST
     const formData = { action: 'roundResult', round: s.round };
+    if (s.teammate) formData.teammate = s.teammate;
     PLAYERS.forEach(p => { formData['place_' + p] = placements[p]; });
     if (s.groomSlayer) formData.groomSlayer = s.groomSlayer;
     if (s.ringerSlayer) formData.ringerSlayer = s.ringerSlayer;
