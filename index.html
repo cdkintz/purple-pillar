@@ -6,20 +6,20 @@
 <title>Celebrate Great Zeng's 庆祝伟大的曾</title>
 <style>
   :root {
-    --bg: #0f0f1a;
-    --card: #1a1a2e;
-    --card-border: #2a2a4a;
-    --primary: #ff6b35;
-    --primary-dim: #cc5528;
-    --teal: #4ecdc4;
+    --bg: #12091e;
+    --card: #1e1232;
+    --card-border: #362552;
+    --primary: #b44adf;
+    --primary-dim: #8a35b0;
+    --teal: #c78bfa;
     --gold: #ffd700;
     --silver: #c0c0c0;
     --bronze: #cd7f32;
     --red: #ff4757;
-    --green: #2ed573;
-    --text: #e8e8e8;
-    --muted: #8888aa;
-    --tab-bg: #16162a;
+    --green: #6ee7b7;
+    --text: #ede8f5;
+    --muted: #9988bb;
+    --tab-bg: #160e28;
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -37,7 +37,7 @@
     position: sticky;
     top: 0;
     z-index: 100;
-    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    background: linear-gradient(135deg, #1e1232 0%, #2a1545 100%);
     border-bottom: 2px solid var(--primary);
     padding: 12px 16px;
     display: flex;
@@ -220,9 +220,9 @@
     border-radius: 4px;
     margin-bottom: 12px;
   }
-  .phase-draft { background: #2a1a4e; color: #a78bfa; }
-  .phase-reverse { background: #1a3a2e; color: #6ee7b7; }
-  .phase-finale { background: #4a1a1a; color: #fca5a5; }
+  .phase-draft { background: #2a1550; color: #c78bfa; }
+  .phase-reverse { background: #1a2a35; color: #6ee7b7; }
+  .phase-finale { background: #3a1535; color: #f0abfc; }
 
   .team-display {
     display: flex;
@@ -236,11 +236,11 @@
     text-align: center;
   }
   .team-groom {
-    background: linear-gradient(135deg, #1a2a4e, #1a3a5e);
+    background: linear-gradient(135deg, #1e1545, #2a1d5e);
     border: 1px solid var(--teal);
   }
   .team-solo {
-    background: linear-gradient(135deg, #2a1a1a, #3a1a1a);
+    background: linear-gradient(135deg, #2a1225, #3a1530);
     border: 1px solid var(--red);
   }
   .team-label {
@@ -434,9 +434,9 @@
     line-height: 1.4;
   }
   .punishment strong { display: block; margin-bottom: 2px; }
-  .punishment-pool { background: rgba(78, 205, 196, 0.1); border-left: 3px solid var(--teal); }
-  .punishment-shot { background: rgba(255, 107, 53, 0.1); border-left: 3px solid var(--primary); }
-  .punishment-drink { background: rgba(255, 71, 87, 0.1); border-left: 3px solid var(--red); }
+  .punishment-pool { background: rgba(199, 139, 250, 0.08); border-left: 3px solid var(--teal); }
+  .punishment-shot { background: rgba(180, 74, 223, 0.1); border-left: 3px solid var(--primary); }
+  .punishment-drink { background: rgba(255, 71, 87, 0.08); border-left: 3px solid var(--red); }
 
   /* Status bar */
   .status-bar {
@@ -477,7 +477,7 @@
 
   /* Finale callout */
   .finale-callout {
-    background: linear-gradient(135deg, #2a1a0a, #3a2a1a);
+    background: linear-gradient(135deg, #2a1a35, #3a2545);
     border: 1px solid var(--gold);
     border-radius: 10px;
     padding: 16px;
@@ -606,7 +606,7 @@
     letter-spacing: 1.5px;
     padding: 4px 12px;
     border-radius: 20px;
-    background: rgba(255, 107, 53, 0.15);
+    background: rgba(180, 74, 223, 0.15);
     color: var(--primary);
     margin-bottom: 8px;
   }
@@ -664,8 +664,8 @@
   }
   .pick-chip {
     padding: 10px 14px;
-    background: rgba(78, 205, 196, 0.06);
-    border: 1px solid rgba(78, 205, 196, 0.2);
+    background: rgba(180, 74, 223, 0.06);
+    border: 1px solid rgba(180, 74, 223, 0.2);
     border-radius: 8px;
     font-size: 14px;
     color: var(--text);
@@ -673,8 +673,8 @@
     transition: all 0.15s;
   }
   .pick-chip:hover, .pick-chip:active {
-    border-color: var(--teal);
-    background: rgba(78, 205, 196, 0.15);
+    border-color: var(--primary);
+    background: rgba(180, 74, 223, 0.15);
     transform: scale(1.03);
   }
   .pick-chip.unavailable {
@@ -756,7 +756,7 @@
     outline: none;
     letter-spacing: 2px;
   }
-  .pw-input:focus { border-color: var(--primary); }
+  .pw-input:focus { border-color: #9b59b6; }
   .pw-input.wrong { border-color: var(--red); animation: shake 0.4s; }
   @keyframes shake {
     0%, 100% { transform: translateX(0); }
@@ -813,7 +813,7 @@
     font-size: 11px;
     padding: 3px 8px;
     border-radius: 6px;
-    background: rgba(255, 107, 53, 0.15);
+    background: rgba(180, 74, 223, 0.15);
     color: var(--primary);
     font-weight: 600;
   }
