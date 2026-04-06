@@ -1832,7 +1832,7 @@ function renderRoundDetail() {
     html += `<div class="card">
       <div class="card-title">Results</div>
       <table class="results-table">
-        <thead><tr><th>Place</th><th>Player</th><th>Character</th><th>Bonus</th></tr></thead>
+        <thead><tr><th>Place</th><th>Player</th><th>Bonus</th></tr></thead>
         <tbody>
           ${sorted.map(p => {
             const place = rd.placements[p];
@@ -1845,7 +1845,6 @@ function renderRoundDetail() {
             return `<tr>
               <td class="place-${place}">${place}${place === 1 ? 'st' : place === 2 ? 'nd' : place === 3 ? 'rd' : 'th'}</td>
               <td class="place-${place}">${p} ${isTeam && selectedRound !== 6 ? '<span style="color:var(--teal);font-size:10px">TEAM</span>' : ''}</td>
-              <td>${rd.chars[p] || '-'}</td>
               <td>${bonuses.join(' ') || '-'}</td>
             </tr>`;
           }).join('')}
@@ -1893,7 +1892,7 @@ function renderRoundHistory() {
     }
 
     html += `<table class="results-table">
-      <thead><tr><th>Place</th><th>Player</th><th>Character</th><th>Bonus</th></tr></thead>
+      <thead><tr><th>Place</th><th>Player</th><th>Bonus</th></tr></thead>
       <tbody>
         ${sorted.map(p => {
           const place = rd.placements[p];
@@ -1906,7 +1905,6 @@ function renderRoundHistory() {
           return `<tr>
             <td class="place-${place}">${place}${place === 1 ? 'st' : place === 2 ? 'nd' : place === 3 ? 'rd' : 'th'}</td>
             <td class="place-${place}">${p} ${isTeam && rd.round !== 6 ? '<span style="color:var(--teal);font-size:10px">TEAM</span>' : ''}</td>
-            <td>${rd.chars[p] || '-'}</td>
             <td>${bonuses.join(' ') || '-'}</td>
           </tr>`;
         }).join('')}
