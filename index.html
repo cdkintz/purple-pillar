@@ -1014,11 +1014,26 @@ async function checkPassword(input) {
   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
-(function initGate() {
+(async function initGate() {
   if (sessionStorage.getItem('pp_auth') === '1') {
     document.getElementById('pw-overlay').style.display = 'none';
     return;
   }
+
+  // Check for ?p= param
+  const urlPw = new URLSearchParams(window.location.search).get('p');
+  if (urlPw) {
+    const hash = await checkPassword(urlPw.toLowerCase().trim());
+    if (hash === PW_HASH) {
+      sessionStorage.setItem('pp_auth', '1');
+      document.getElementById('pw-overlay').style.display = 'none';
+      // Clean the password out of the URL
+      const clean = window.location.pathname + window.location.hash;
+      history.replaceState(null, '', clean);
+      return;
+    }
+  }
+
   // Hide app until authenticated
   document.getElementById('app').style.display = 'none';
   const input = document.getElementById('pw-input');
