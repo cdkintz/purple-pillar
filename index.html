@@ -1014,36 +1014,41 @@ async function checkPassword(input) {
   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
-(async function initGate() {
+function unlockApp() {
+  sessionStorage.setItem('pp_auth', '1');
+  document.getElementById('pw-overlay').style.display = 'none';
+  document.getElementById('app').style.display = '';
+}
+
+(function initGate() {
+  // Already authed this session
   if (sessionStorage.getItem('pp_auth') === '1') {
     document.getElementById('pw-overlay').style.display = 'none';
     return;
   }
 
-  // Check for ?p= param
-  const urlPw = new URLSearchParams(window.location.search).get('p');
-  if (urlPw) {
-    const hash = await checkPassword(urlPw.toLowerCase().trim());
-    if (hash === PW_HASH) {
-      sessionStorage.setItem('pp_auth', '1');
-      document.getElementById('pw-overlay').style.display = 'none';
-      // Clean the password out of the URL
-      const clean = window.location.pathname + window.location.hash;
-      history.replaceState(null, '', clean);
-      return;
-    }
-  }
-
   // Hide app until authenticated
   document.getElementById('app').style.display = 'none';
+
+  // Check for ?p= param (async, but resolves fast)
+  const urlPw = new URLSearchParams(window.location.search).get('p');
+  if (urlPw) {
+    checkPassword(urlPw.toLowerCase().trim()).then(hash => {
+      if (hash === PW_HASH) {
+        unlockApp();
+        // Clean the password out of the URL
+        history.replaceState(null, '', window.location.pathname + window.location.hash);
+      }
+    });
+  }
+
+  // Manual password entry
   const input = document.getElementById('pw-input');
   input.addEventListener('keydown', async (e) => {
     if (e.key === 'Enter') {
       const hash = await checkPassword(input.value.toLowerCase().trim());
       if (hash === PW_HASH) {
-        sessionStorage.setItem('pp_auth', '1');
-        document.getElementById('pw-overlay').style.display = 'none';
-        document.getElementById('app').style.display = '';
+        unlockApp();
       } else {
         input.classList.add('wrong');
         input.value = '';
