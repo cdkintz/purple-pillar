@@ -1129,7 +1129,7 @@
   </div>
 
   <div class="main">
-    <!-- LEADERBOARD VIEW -->
+    <!-- SCORES + ROUNDS VIEW (combined) -->
     <div class="view active" id="view-leaderboard">
       <div class="card">
         <div class="card-title">Leaderboard</div>
@@ -1148,12 +1148,11 @@
         <div class="card-title">Active Punishments</div>
         <div id="punishments-content"></div>
       </div>
-    </div>
 
-    <!-- ROUNDS VIEW -->
-    <div class="view" id="view-rounds">
       <div class="round-nav" id="round-nav"></div>
       <div id="round-detail"></div>
+
+      <div id="round-history"></div>
     </div>
 
     <!-- DRAFT VIEW -->
@@ -1268,10 +1267,6 @@
     <button class="tab active" onclick="switchTab('leaderboard')">
       <span class="tab-icon">&#127942;</span>
       <span>Scores</span>
-    </button>
-    <button class="tab" onclick="switchTab('rounds')">
-      <span class="tab-icon">&#127918;</span>
-      <span>Rounds</span>
     </button>
     <button class="tab" onclick="switchTab('draft')">
       <span class="tab-icon">&#128203;</span>
@@ -1602,6 +1597,7 @@ function renderAll() {
   renderPunishments();
   renderRoundNav();
   renderRoundDetail();
+  renderRoundHistory();
   renderDraft();
 }
 
@@ -1843,6 +1839,64 @@ function renderRoundDetail() {
     </div>`;
   }
 
+  el.innerHTML = html;
+}
+
+function renderRoundHistory() {
+  const el = document.getElementById('round-history');
+  const completedRounds = roundsData
+    .filter(rd => PLAYERS.some(p => rd.placements[p] !== null))
+    .sort((a, b) => b.round - a.round); // descending
+
+  if (completedRounds.length === 0) {
+    el.innerHTML = '';
+    return;
+  }
+
+  let html = '<div style="margin-top:16px"><div class="card-title" style="padding:0 0 8px">Round Results</div>';
+
+  completedRounds.forEach(rd => {
+    const sorted = PLAYERS
+      .filter(p => rd.placements[p] !== null)
+      .sort((a, b) => (rd.placements[a] || 99) - (rd.placements[b] || 99));
+
+    const roundInfo = ROUND_PHASES[rd.round];
+    const teamLabel = rd.teammate ? `Steven + ${rd.teammate}` : '';
+
+    html += `<div class="card" style="margin-bottom:10px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div style="font-weight:800;font-size:16px">Round ${rd.round}</div>
+        <span class="round-phase phase-${roundInfo.phase}" style="font-size:11px">${roundInfo.label}</span>
+      </div>`;
+
+    if (teamLabel && rd.round !== 6) {
+      html += `<div style="font-size:13px;color:var(--muted);margin-bottom:8px">Team: ${teamLabel}</div>`;
+    }
+
+    html += `<table class="results-table">
+      <thead><tr><th>Place</th><th>Player</th><th>Character</th><th>Bonus</th></tr></thead>
+      <tbody>
+        ${sorted.map(p => {
+          const place = rd.placements[p];
+          const bonuses = [];
+          if (rd.firstBlood === p) bonuses.push('<span class="bonus-tag" style="background:var(--gold);color:#000">1st Blood</span>');
+          if (rd.groomSlayer === p) bonuses.push('<span class="bonus-tag bonus-groom">Groom KO</span>');
+          if (rd.ringerSlayer === p) bonuses.push('<span class="bonus-tag bonus-ringer">Cory KO</span>');
+          if (rd.spiked === p) bonuses.push('<span class="bonus-tag" style="background:#666;color:#fff">Spiked -1</span>');
+          const isTeam = p === 'Steven' || p === rd.teammate;
+          return `<tr>
+            <td class="place-${place}">${place}${place === 1 ? 'st' : place === 2 ? 'nd' : place === 3 ? 'rd' : 'th'}</td>
+            <td class="place-${place}">${p} ${isTeam && rd.round !== 6 ? '<span style="color:var(--teal);font-size:10px">TEAM</span>' : ''}</td>
+            <td>${rd.chars[p] || '-'}</td>
+            <td>${bonuses.join(' ') || '-'}</td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>
+    </div>`;
+  });
+
+  html += '</div>';
   el.innerHTML = html;
 }
 
@@ -2509,19 +2563,19 @@ function switchTab(tab) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
 
-  const views = ['leaderboard', 'rounds', 'draft', 'rules', 'settings'];
+  const views = ['leaderboard', 'draft', 'rules', 'settings'];
   const idx = views.indexOf(tab);
   document.querySelectorAll('.tab')[idx].classList.add('active');
   document.getElementById(`view-${tab}`).classList.add('active');
 
   // Update URL hash without triggering hashchange
-  const hashMap = { leaderboard: 'scores', rounds: 'rounds', draft: 'draft', rules: 'rules', settings: 'settings' };
+  const hashMap = { leaderboard: 'scores', draft: 'draft', rules: 'rules', settings: 'settings' };
   history.replaceState(null, '', '#' + hashMap[tab]);
 }
 
 function getTabFromHash() {
   const hash = location.hash.replace('#', '').toLowerCase();
-  const map = { scores: 'leaderboard', rounds: 'rounds', draft: 'draft', rules: 'rules', settings: 'settings' };
+  const map = { scores: 'leaderboard', rounds: 'leaderboard', draft: 'draft', rules: 'rules', settings: 'settings' };
   return map[hash] || null;
 }
 
