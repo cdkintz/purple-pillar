@@ -1,0 +1,1919 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>The Purple Pillar Invitational</title>
+<style>
+  :root {
+    --bg: #0f0f1a;
+    --card: #1a1a2e;
+    --card-border: #2a2a4a;
+    --primary: #ff6b35;
+    --primary-dim: #cc5528;
+    --teal: #4ecdc4;
+    --gold: #ffd700;
+    --silver: #c0c0c0;
+    --bronze: #cd7f32;
+    --red: #ff4757;
+    --green: #2ed573;
+    --text: #e8e8e8;
+    --muted: #8888aa;
+    --tab-bg: #16162a;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100dvh;
+    overflow-x: hidden;
+  }
+
+  /* Header */
+  .header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border-bottom: 2px solid var(--primary);
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .header h1 {
+    font-size: 18px;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--primary), var(--gold));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: 0.5px;
+  }
+  .header-actions { display: flex; gap: 8px; align-items: center; }
+  .refresh-btn, .settings-btn {
+    background: none;
+    border: 1px solid var(--card-border);
+    color: var(--muted);
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .refresh-btn:hover, .settings-btn:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+  }
+  .refresh-btn.spinning { animation: spin 1s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Tab bar */
+  .tab-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    background: var(--tab-bg);
+    border-top: 1px solid var(--card-border);
+    display: flex;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .tab {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 8px 4px 6px;
+    font-size: 10px;
+    color: var(--muted);
+    cursor: pointer;
+    transition: color 0.2s;
+    border: none;
+    background: none;
+    gap: 3px;
+  }
+  .tab-icon { font-size: 20px; }
+  .tab.active { color: var(--primary); }
+
+  /* Main content */
+  .main {
+    padding: 16px;
+    padding-bottom: 80px;
+  }
+  .view { display: none; }
+  .view.active { display: block; }
+
+  /* Cards */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+  .card-title {
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+
+  /* Leaderboard */
+  .lb-row {
+    display: flex;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--card-border);
+    gap: 12px;
+  }
+  .lb-row:last-child { border-bottom: none; }
+  .lb-rank {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+  .lb-rank.r1 { background: var(--gold); color: #000; }
+  .lb-rank.r2 { background: var(--silver); color: #000; }
+  .lb-rank.r3 { background: var(--bronze); color: #000; }
+  .lb-rank.r4, .lb-rank.r5 { background: var(--card-border); color: var(--muted); }
+  .lb-name {
+    flex: 1;
+    font-weight: 600;
+    font-size: 16px;
+  }
+  .lb-tag {
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 600;
+    margin-left: 6px;
+  }
+  .tag-ringer { background: var(--red); color: #fff; }
+  .tag-bachelor { background: var(--teal); color: #000; }
+  .lb-points {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--primary);
+  }
+  .lb-breakdown {
+    font-size: 11px;
+    color: var(--muted);
+    margin-left: 4px;
+    min-width: 40px;
+    text-align: right;
+  }
+
+  /* Round view */
+  .round-nav {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  .round-btn {
+    flex: 1;
+    min-width: 44px;
+    padding: 8px 4px;
+    border: 1px solid var(--card-border);
+    background: var(--card);
+    color: var(--muted);
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s;
+  }
+  .round-btn.active {
+    border-color: var(--primary);
+    background: var(--primary);
+    color: #fff;
+  }
+  .round-btn.completed {
+    border-color: var(--green);
+    color: var(--green);
+  }
+  .round-btn.active.completed {
+    background: var(--green);
+    color: #fff;
+  }
+
+  .round-phase {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    margin-bottom: 12px;
+  }
+  .phase-draft { background: #2a1a4e; color: #a78bfa; }
+  .phase-reverse { background: #1a3a2e; color: #6ee7b7; }
+  .phase-finale { background: #4a1a1a; color: #fca5a5; }
+
+  .team-display {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .team-card {
+    flex: 1;
+    border-radius: 10px;
+    padding: 12px;
+    text-align: center;
+  }
+  .team-groom {
+    background: linear-gradient(135deg, #1a2a4e, #1a3a5e);
+    border: 1px solid var(--teal);
+  }
+  .team-solo {
+    background: linear-gradient(135deg, #2a1a1a, #3a1a1a);
+    border: 1px solid var(--red);
+  }
+  .team-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+  }
+  .team-groom .team-label { color: var(--teal); }
+  .team-solo .team-label { color: var(--red); }
+  .team-players {
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .results-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .results-table th {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-align: left;
+    padding: 6px 8px;
+    border-bottom: 1px solid var(--card-border);
+  }
+  .results-table td {
+    padding: 8px;
+    font-size: 14px;
+    border-bottom: 1px solid rgba(42, 42, 74, 0.5);
+  }
+  .results-table tr:last-child td { border-bottom: none; }
+  .place-1 { color: var(--gold); font-weight: 700; }
+  .place-2 { color: var(--silver); }
+  .place-3 { color: var(--bronze); }
+  .place-5 { color: var(--red); }
+  .bonus-tag {
+    display: inline-block;
+    font-size: 9px;
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-weight: 700;
+    margin-left: 4px;
+  }
+  .bonus-groom { background: var(--teal); color: #000; }
+  .bonus-ringer { background: var(--red); color: #fff; }
+
+  /* Selection order for Phase 2 */
+  .selection-order {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .selection-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 8px;
+  }
+  .selection-number {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--primary);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 800;
+    flex-shrink: 0;
+  }
+
+  /* Draft view */
+  .draft-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .draft-player-card {
+    border-radius: 10px;
+    padding: 12px;
+    background: var(--card);
+    border: 1px solid var(--card-border);
+  }
+  .draft-player-name {
+    font-weight: 700;
+    font-size: 15px;
+    margin-bottom: 8px;
+  }
+  .draft-chars {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .draft-char {
+    padding: 4px 10px;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 6px;
+    font-size: 13px;
+  }
+  .draft-char.empty {
+    color: var(--muted);
+    border: 1px dashed var(--card-border);
+    background: none;
+  }
+
+  .draft-order-list {
+    counter-reset: pick;
+  }
+  .draft-pick {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(42, 42, 74, 0.3);
+  }
+  .draft-pick:last-child { border-bottom: none; }
+  .draft-pick-num {
+    width: 24px;
+    font-size: 12px;
+    color: var(--muted);
+    font-weight: 700;
+    text-align: center;
+  }
+  .draft-pick-player {
+    font-weight: 600;
+    min-width: 70px;
+  }
+  .draft-pick-char {
+    color: var(--teal);
+    font-weight: 500;
+  }
+  .draft-pick-char.empty {
+    color: var(--muted);
+    font-style: italic;
+  }
+  .draft-round-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--primary);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 8px 0 4px;
+    border-bottom: 1px solid var(--card-border);
+    margin-bottom: 4px;
+  }
+
+  /* Rules */
+  .rule-section {
+    margin-bottom: 8px;
+  }
+  .rule-section h3 {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: var(--primary);
+  }
+  .rule-section p, .rule-section li {
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--text);
+  }
+  .rule-section ul {
+    list-style: none;
+    padding: 0;
+  }
+  .rule-section li {
+    padding: 4px 0;
+    padding-left: 16px;
+    position: relative;
+  }
+  .rule-section li::before {
+    content: '>';
+    position: absolute;
+    left: 0;
+    color: var(--primary);
+    font-weight: 700;
+  }
+
+  .punishment {
+    padding: 10px 12px;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    font-size: 13px;
+    line-height: 1.4;
+  }
+  .punishment strong { display: block; margin-bottom: 2px; }
+  .punishment-pool { background: rgba(78, 205, 196, 0.1); border-left: 3px solid var(--teal); }
+  .punishment-shot { background: rgba(255, 107, 53, 0.1); border-left: 3px solid var(--primary); }
+  .punishment-drink { background: rgba(255, 71, 87, 0.1); border-left: 3px solid var(--red); }
+
+  /* Status bar */
+  .status-bar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+  }
+  .status-dot.error { background: var(--red); }
+
+  /* Scoring explainer in leaderboard */
+  .scoring-legend {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+  .scoring-legend span { white-space: nowrap; }
+  .scoring-legend strong { color: var(--text); }
+
+  /* Empty state */
+  .empty-state {
+    text-align: center;
+    padding: 32px 16px;
+    color: var(--muted);
+  }
+  .empty-state .icon { font-size: 36px; margin-bottom: 8px; }
+  .empty-state p { font-size: 14px; }
+
+  /* Finale callout */
+  .finale-callout {
+    background: linear-gradient(135deg, #2a1a0a, #3a2a1a);
+    border: 1px solid var(--gold);
+    border-radius: 10px;
+    padding: 16px;
+    text-align: center;
+    margin-bottom: 12px;
+  }
+  .finale-callout h3 {
+    color: var(--gold);
+    font-size: 16px;
+    margin-bottom: 4px;
+  }
+  .finale-callout p {
+    color: var(--muted);
+    font-size: 13px;
+  }
+  .finale-vs {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 12px;
+    font-size: 18px;
+    font-weight: 800;
+  }
+  .finale-vs .vs {
+    color: var(--red);
+    font-size: 14px;
+  }
+
+  /* Roster grid */
+  .roster-search {
+    width: 100%;
+    padding: 10px 12px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--card-border);
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 14px;
+    outline: none;
+    margin-bottom: 10px;
+    transition: border-color 0.2s;
+  }
+  .roster-search:focus { border-color: var(--primary); }
+  .roster-search::placeholder { color: var(--muted); }
+  .roster-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+  .roster-chip {
+    padding: 4px 10px;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 6px;
+    font-size: 12px;
+    color: var(--text);
+    transition: all 0.15s;
+  }
+  .roster-chip.drafted {
+    opacity: 0.3;
+    text-decoration: line-through;
+    color: var(--muted);
+  }
+
+  /* Identity modal */
+  .identity-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    background: rgba(0, 0, 0, 0.85);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .identity-modal {
+    background: var(--card);
+    border: 2px solid var(--primary);
+    border-radius: 16px;
+    padding: 28px 24px;
+    max-width: 340px;
+    width: 100%;
+    text-align: center;
+  }
+  .identity-modal h2 {
+    font-size: 20px;
+    margin-bottom: 4px;
+    background: linear-gradient(135deg, var(--primary), var(--gold));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .identity-modal p {
+    color: var(--muted);
+    font-size: 13px;
+    margin-bottom: 20px;
+  }
+  .identity-btn {
+    display: block;
+    width: 100%;
+    padding: 14px;
+    margin-bottom: 8px;
+    border: 1px solid var(--card-border);
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text);
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .identity-btn:hover, .identity-btn:active {
+    border-color: var(--primary);
+    background: rgba(255, 107, 53, 0.1);
+  }
+  .identity-btn .tag { font-size: 11px; margin-left: 6px; }
+
+  /* Draft hero */
+  .draft-hero {
+    text-align: center;
+    padding: 20px 0 8px;
+  }
+  .draft-round-badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    background: rgba(255, 107, 53, 0.15);
+    color: var(--primary);
+    margin-bottom: 8px;
+  }
+  .draft-hero-title {
+    font-size: 22px;
+    font-weight: 800;
+    margin-bottom: 4px;
+  }
+  .draft-hero-title.your-turn { color: var(--green); }
+  .draft-hero-title.waiting { color: var(--muted); }
+  .draft-hero-title.complete { color: var(--gold); }
+  .draft-hero-sub {
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .draft-progress {
+    display: flex;
+    gap: 3px;
+    justify-content: center;
+    margin: 14px 0;
+  }
+  .draft-pip {
+    width: 18px;
+    height: 6px;
+    border-radius: 3px;
+    background: var(--card-border);
+    transition: background 0.3s;
+  }
+  .draft-pip.done { background: var(--teal); }
+  .draft-pip.current { background: var(--green); animation: pip-pulse 1.5s ease-in-out infinite; }
+  @keyframes pip-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  /* Pick grid */
+  .pick-search {
+    width: 100%;
+    padding: 12px 14px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--card-border);
+    border-radius: 10px;
+    color: var(--text);
+    font-size: 15px;
+    outline: none;
+    margin-bottom: 10px;
+    transition: border-color 0.2s;
+  }
+  .pick-search:focus { border-color: var(--green); }
+  .pick-search::placeholder { color: var(--muted); }
+  .pick-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .pick-chip {
+    padding: 10px 14px;
+    background: rgba(78, 205, 196, 0.06);
+    border: 1px solid rgba(78, 205, 196, 0.2);
+    border-radius: 8px;
+    font-size: 14px;
+    color: var(--text);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .pick-chip:hover, .pick-chip:active {
+    border-color: var(--teal);
+    background: rgba(78, 205, 196, 0.15);
+    transform: scale(1.03);
+  }
+  .pick-chip.unavailable {
+    opacity: 0.2;
+    pointer-events: none;
+    text-decoration: line-through;
+    border-color: var(--card-border);
+    background: none;
+  }
+
+  /* Pick history */
+  .pick-history {
+    list-style: none;
+    padding: 0;
+  }
+  .pick-history-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(42, 42, 74, 0.3);
+    font-size: 14px;
+  }
+  .pick-history-item:last-child { border-bottom: none; }
+  .pick-num {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 800;
+    flex-shrink: 0;
+    background: var(--card-border);
+    color: var(--muted);
+  }
+  .pick-num.done { background: var(--teal); color: #000; }
+  .pick-num.current { background: var(--green); color: #000; animation: pip-pulse 1.5s ease-in-out infinite; }
+  .pick-player { font-weight: 600; min-width: 65px; }
+  .pick-char { color: var(--teal); }
+  .pick-char.empty { color: var(--muted); font-style: italic; }
+  .pick-you { color: var(--primary); font-size: 10px; font-weight: 700; }
+
+  /* Password gate */
+  .pw-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 300;
+    background: var(--bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .pw-modal {
+    text-align: center;
+    max-width: 300px;
+    width: 100%;
+  }
+  .pw-modal h2 {
+    font-size: 28px;
+    margin-bottom: 8px;
+  }
+  .pw-modal p {
+    color: var(--muted);
+    font-size: 13px;
+    margin-bottom: 20px;
+  }
+  .pw-input {
+    width: 100%;
+    padding: 14px;
+    background: var(--card);
+    border: 2px solid var(--card-border);
+    border-radius: 10px;
+    color: var(--text);
+    font-size: 18px;
+    text-align: center;
+    outline: none;
+    letter-spacing: 2px;
+  }
+  .pw-input:focus { border-color: var(--primary); }
+  .pw-input.wrong { border-color: var(--red); animation: shake 0.4s; }
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-8px); }
+    75% { transform: translateX(8px); }
+  }
+
+  /* Confirm modal */
+  .confirm-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    background: rgba(0, 0, 0, 0.85);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .confirm-modal {
+    background: var(--card);
+    border: 2px solid var(--teal);
+    border-radius: 16px;
+    padding: 28px 24px;
+    max-width: 340px;
+    width: 100%;
+    text-align: center;
+  }
+  .confirm-modal h3 { font-size: 18px; margin-bottom: 8px; color: var(--teal); }
+  .confirm-modal .char-name {
+    font-size: 24px;
+    font-weight: 800;
+    margin: 12px 0;
+    color: var(--text);
+  }
+  .confirm-modal .pick-info { font-size: 13px; color: var(--muted); margin-bottom: 20px; }
+  .confirm-btns { display: flex; gap: 10px; }
+  .confirm-btns button {
+    flex: 1;
+    padding: 12px;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    border: none;
+    transition: opacity 0.2s;
+  }
+  .confirm-btns button:active { opacity: 0.7; }
+  .btn-cancel { background: var(--card-border); color: var(--text); }
+  .btn-confirm { background: var(--teal); color: #000; }
+  .btn-confirm:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* Identity indicator in header */
+  .identity-badge {
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 6px;
+    background: rgba(255, 107, 53, 0.15);
+    color: var(--primary);
+    font-weight: 600;
+  }
+
+  /* Responsive tweaks */
+  @media (min-width: 600px) {
+    .main { max-width: 600px; margin: 0 auto; }
+    .draft-grid { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- PASSWORD GATE -->
+<div class="pw-overlay" id="pw-overlay">
+  <div class="pw-modal">
+    <h2>🍆</h2>
+    <p>Enter the password</p>
+    <input type="password" class="pw-input" id="pw-input" placeholder="..." autofocus>
+  </div>
+</div>
+
+<!-- IDENTITY MODAL -->
+<div class="identity-overlay" id="identity-overlay" style="display:none">
+  <div class="identity-modal">
+    <h2>🍆 PURPLE PILLAR 🍆</h2>
+    <p>Who are you?</p>
+    <div id="identity-buttons"></div>
+  </div>
+</div>
+
+<!-- CONFIRM PICK MODAL -->
+<div class="confirm-overlay" id="confirm-overlay" style="display:none">
+  <div class="confirm-modal">
+    <h3>Confirm Pick</h3>
+    <div class="char-name" id="confirm-char-name"></div>
+    <div class="pick-info" id="confirm-pick-info"></div>
+    <div class="confirm-btns">
+      <button class="btn-cancel" onclick="cancelPick()">Cancel</button>
+      <button class="btn-confirm" id="btn-confirm" onclick="confirmPick()">Lock In</button>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app">
+  <div class="header">
+    <h1>🍆 PURPLE PILLAR 🍆</h1>
+    <div class="header-actions">
+      <span class="identity-badge" id="identity-badge" style="display:none"></span>
+      <div class="status-bar">
+        <div class="status-dot" id="status-dot"></div>
+        <span id="status-text">Connected</span>
+      </div>
+      <button class="refresh-btn" id="refresh-btn" onclick="refreshData()">&#x21bb;</button>
+      <a class="settings-btn" href="https://docs.google.com/spreadsheets/d/1-Enq2ClPrx2ZcIbMvRE0mqspB4152LKbL0mDHp3etWs/edit" target="_blank" style="text-decoration:none">Sheet</a>
+    </div>
+  </div>
+
+  <div class="main">
+    <!-- LEADERBOARD VIEW -->
+    <div class="view active" id="view-leaderboard">
+      <div class="card">
+        <div class="card-title">Leaderboard</div>
+        <div class="scoring-legend">
+          <span>Team Win: <strong>+5</strong></span>
+          <span>Solo Win: <strong>+5</strong></span>
+          <span>Groom KO: <strong>+1</strong></span>
+          <span>Cory KO: <strong>+2</strong></span>
+          <span>First Blood: <strong>+1</strong></span>
+          <span>Spiked: <strong>-1</strong></span>
+        </div>
+        <div id="leaderboard-content"></div>
+      </div>
+
+      <div class="card" id="punishments-card">
+        <div class="card-title">Active Punishments</div>
+        <div id="punishments-content"></div>
+      </div>
+    </div>
+
+    <!-- ROUNDS VIEW -->
+    <div class="view" id="view-rounds">
+      <div class="round-nav" id="round-nav"></div>
+      <div id="round-detail"></div>
+    </div>
+
+    <!-- DRAFT VIEW -->
+    <div class="view" id="view-draft">
+      <div id="draft-live"></div>
+    </div>
+
+    <!-- RULES VIEW -->
+    <div class="view" id="view-rules">
+      <div class="card rule-section">
+        <h3>Format</h3>
+        <ul>
+          <li>5 players, 6 rounds &mdash; 2v1v1v1 Team Battle</li>
+          <li>3 Stocks, 10-Min Limit, No Items, Team Attack ON</li>
+          <li>Steven ("The Bachelor") is always on the team of 2</li>
+          <li>The other 3 are "Solo Assassins"</li>
+        </ul>
+      </div>
+
+      <div class="card rule-section">
+        <h3>Phase 1: The Draft (Rounds 1-3)</h3>
+        <ul>
+          <li>3 rounds: each player picks a pool of 3 characters</li>
+          <li>Same order every round: Steven &rarr; Rodney &rarr; Franco &rarr; Ben &rarr; Cory</li>
+          <li>Round 1: Steven picks his first teammate (not Cory)</li>
+          <li>Rounds 2-3: Steven pairs with whoever placed 5th last round</li>
+          <li>Must use drafted characters only</li>
+        </ul>
+      </div>
+
+      <div class="card rule-section">
+        <h3>Phase 2: Reverse Selection (Rounds 4-5)</h3>
+        <ul>
+          <li>Any character allowed &mdash; draft pool discarded</li>
+          <li>Steven pairs with whoever placed 5th last round</li>
+          <li>Character draft resumes in inverse score order (lowest picks first)</li>
+          <li>Tiebreaker: whoever died earliest in the previous round picks first</li>
+        </ul>
+      </div>
+
+      <div class="card rule-section">
+        <h3>Phase 3: The Finale (Round 6)</h3>
+        <ul>
+          <li>1v1 between the top two point leaders after 5 rounds</li>
+          <li>Free character choice, draft order by lowest score</li>
+          <li>Tiebreaker: whoever died earliest in previous rounds picks first</li>
+        </ul>
+      </div>
+
+      <div class="card rule-section">
+        <h3>Scoring</h3>
+        <ul>
+          <li>Team Win (Steven + Wingman each): <strong>+5 pts</strong></li>
+          <li>Solo Win (Assassin beats everyone): <strong>+5 pts</strong></li>
+          <li>First Blood (first KO of the round): <strong>+1 pt</strong></li>
+          <li>Groom-Slayer (take Steven's last stock): <strong>+1 pt</strong></li>
+          <li>Cory-Slayer (take Cory's last stock): <strong>+2 pts</strong></li>
+          <li>Spiked (meteor/spike KO, max 1 per round): <strong>-1 pt</strong></li>
+        </ul>
+      </div>
+
+      <div class="card rule-section">
+        <h3>Stakes &amp; Punishments</h3>
+        <div class="punishment punishment-pool">
+          <strong>The Guerneville Dip</strong>
+          5th place must jump into the unheated pool for 30 seconds before returning to the hot tub.
+        </div>
+        <div class="punishment punishment-shot">
+          <strong>The Cory Debuff</strong>
+          Every time Cory wins, he must take a "Victory Shot" to naturally handicap his skill.
+        </div>
+        <div class="punishment punishment-drink">
+          <strong>The 3-Stock Penalty</strong>
+          Lose all 3 stocks without taking a single stock from anyone? Take a shot, put it in your mouth, get in the pool and touch the bottom &mdash; don't swallow until you've returned to the surface.
+        </div>
+        <div class="punishment punishment-pool">
+          <strong>The Asshole Rule</strong>
+          Last place overall must replenish beverages for the group.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB BAR -->
+  <div class="tab-bar">
+    <button class="tab active" onclick="switchTab('leaderboard')">
+      <span class="tab-icon">&#127942;</span>
+      <span>Scores</span>
+    </button>
+    <button class="tab" onclick="switchTab('rounds')">
+      <span class="tab-icon">&#127918;</span>
+      <span>Rounds</span>
+    </button>
+    <button class="tab" onclick="switchTab('draft')">
+      <span class="tab-icon">&#128203;</span>
+      <span>Draft</span>
+    </button>
+    <button class="tab" onclick="switchTab('rules')">
+      <span class="tab-icon">&#128214;</span>
+      <span>Rules</span>
+    </button>
+  </div>
+</div>
+
+<script>
+// ===== PASSWORD GATE =====
+const PW_HASH = 'd9e36ff2055d23ac1b39509df8e7fa4f34d86b3da922e51fd8a1d539dd10b026';
+
+async function checkPassword(input) {
+  const encoded = new TextEncoder().encode(input);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', encoded);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+(function initGate() {
+  if (sessionStorage.getItem('pp_auth') === '1') {
+    document.getElementById('pw-overlay').style.display = 'none';
+    return;
+  }
+  // Hide app until authenticated
+  document.getElementById('app').style.display = 'none';
+  const input = document.getElementById('pw-input');
+  input.addEventListener('keydown', async (e) => {
+    if (e.key === 'Enter') {
+      const hash = await checkPassword(input.value.toLowerCase().trim());
+      if (hash === PW_HASH) {
+        sessionStorage.setItem('pp_auth', '1');
+        document.getElementById('pw-overlay').style.display = 'none';
+        document.getElementById('app').style.display = '';
+      } else {
+        input.classList.add('wrong');
+        input.value = '';
+        setTimeout(() => input.classList.remove('wrong'), 500);
+      }
+    }
+  });
+})();
+
+// ===== APPS SCRIPT URL =====
+// After deploying Google Apps Script as a web app, paste the URL here:
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzsg6_XAaV8Xv9BTBkbCYeD3o6VmCt2_sjA9oZ4rdTnca0_V8c6Iwv-toBcca7vJuO_6Q/exec';
+
+const PLAYERS = ['Steven', 'Cory', 'Ben', 'Franco', 'Rodney'];
+const PLAYER_TAGS = { Steven: 'bachelor' };
+
+const SNAKE_DRAFT_ORDER = [
+  'Steven', 'Rodney', 'Franco', 'Ben', 'Cory',
+  'Steven', 'Rodney', 'Franco', 'Ben', 'Cory',
+  'Steven', 'Rodney', 'Franco', 'Ben', 'Cory'
+];
+
+// Identity management
+let currentPlayer = localStorage.getItem('purplepillar_player') || null;
+let pendingPick = null; // {pick, character} awaiting confirmation
+
+// Full SSBU base roster (non-DLC)
+const ROSTER = [
+  'Mario', 'Donkey Kong', 'Link', 'Samus', 'Dark Samus', 'Yoshi', 'Kirby', 'Fox',
+  'Pikachu', 'Luigi', 'Ness', 'Captain Falcon', 'Jigglypuff', 'Peach', 'Daisy',
+  'Bowser', 'Ice Climbers', 'Sheik', 'Zelda', 'Dr. Mario', 'Pichu', 'Falco',
+  'Marth', 'Lucina', 'Young Link', 'Ganondorf', 'Mewtwo', 'Roy', 'Chrom',
+  'Mr. Game & Watch', 'Meta Knight', 'Pit', 'Dark Pit', 'Zero Suit Samus',
+  'Wario', 'Snake', 'Ike', 'Pokemon Trainer', 'Diddy Kong', 'Lucas', 'Sonic',
+  'King Dedede', 'Olimar', 'Lucario', 'R.O.B.', 'Toon Link', 'Wolf',
+  'Villager', 'Mega Man', 'Wii Fit Trainer', 'Rosalina & Luma', 'Little Mac',
+  'Greninja', 'Mii Brawler', 'Mii Swordfighter', 'Mii Gunner', 'Palutena',
+  'Pac-Man', 'Robin', 'Shulk', 'Bowser Jr.', 'Duck Hunt', 'Ryu', 'Ken',
+  'Cloud', 'Corrin', 'Bayonetta', 'Inkling', 'Ridley', 'Simon', 'Richter',
+  'King K. Rool', 'Isabelle', 'Incineroar'
+];
+
+const ROUND_PHASES = {
+  1: { phase: 'draft', label: 'Phase 1: Draft' },
+  2: { phase: 'draft', label: 'Phase 1: Draft' },
+  3: { phase: 'draft', label: 'Phase 1: Draft' },
+  4: { phase: 'reverse', label: 'Phase 2: Reverse Select' },
+  5: { phase: 'reverse', label: 'Phase 2: Reverse Select' },
+  6: { phase: 'finale', label: 'Phase 3: Finale' },
+};
+
+const sheetId = '1-Enq2ClPrx2ZcIbMvRE0mqspB4152LKbL0mDHp3etWs';
+let draftData = [];   // [{pick, player, character}]
+let roundsData = [];  // [{round, teammate, placements:{player:place}, chars:{player:char}, groomSlayer, ringerSlayer}]
+let selectedRound = 1;
+
+// --- Sheet Connection ---
+
+function extractSheetId(url) {
+  const match = url.match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);
+  return match ? match[1] : null;
+}
+
+async function fetchTab(tabName) {
+  const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(tabName)}`;
+  const resp = await fetch(url);
+  if (!resp.ok) throw new Error(`Failed to fetch ${tabName} tab`);
+  const text = await resp.text();
+  return parseCSV(text);
+}
+
+function parseCSV(text) {
+  const rows = [];
+  let current = '';
+  let inQuotes = false;
+  const lines = [];
+
+  // Split into lines respecting quoted fields
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (ch === '"') {
+      if (inQuotes && text[i + 1] === '"') {
+        current += '"';
+        i++;
+      } else {
+        inQuotes = !inQuotes;
+      }
+    } else if (ch === '\n' && !inQuotes) {
+      lines.push(current);
+      current = '';
+    } else {
+      current += ch;
+    }
+  }
+  if (current) lines.push(current);
+
+  for (const line of lines) {
+    if (!line.trim()) continue;
+    const cols = [];
+    let field = '';
+    let inQ = false;
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i];
+      if (ch === '"') {
+        if (inQ && line[i + 1] === '"') {
+          field += '"';
+          i++;
+        } else {
+          inQ = !inQ;
+        }
+      } else if (ch === ',' && !inQ) {
+        cols.push(field.trim());
+        field = '';
+      } else {
+        field += ch;
+      }
+    }
+    cols.push(field.trim());
+    rows.push(cols);
+  }
+  return rows;
+}
+
+function parseDraft(rows) {
+  if (rows.length < 2) return [];
+  const data = [];
+  for (let i = 1; i < rows.length; i++) {
+    const r = rows[i];
+    if (!r[0]) continue;
+    data.push({
+      pick: parseInt(r[0]) || i,
+      player: r[1] || '',
+      character: r[2] || ''
+    });
+  }
+  return data;
+}
+
+function parseRounds(rows) {
+  if (rows.length < 2) return [];
+  const data = [];
+  for (let i = 1; i < rows.length; i++) {
+    const r = rows[i];
+    if (!r[0]) continue;
+    const round = parseInt(r[0]);
+    const teammate = r[1] || '';
+    const placements = {};
+    const chars = {};
+    PLAYERS.forEach((p, idx) => {
+      const placeVal = r[2 + idx];
+      placements[p] = placeVal ? parseInt(placeVal) : null;
+      chars[p] = r[7 + idx] || '';
+    });
+    data.push({
+      round,
+      teammate,
+      placements,
+      chars,
+      groomSlayer: r[12] || '',
+      ringerSlayer: r[13] || '',
+      firstBlood: r[14] || '',
+      spiked: r[15] || ''
+    });
+  }
+  return data;
+}
+
+async function refreshData() {
+  const btn = document.getElementById('refresh-btn');
+  const dot = document.getElementById('status-dot');
+  const statusText = document.getElementById('status-text');
+
+  btn.classList.add('spinning');
+  try {
+    const [draftRows, roundRows] = await Promise.all([
+      fetchTab('Draft'),
+      fetchTab('Rounds')
+    ]);
+    const freshDraft = parseDraft(draftRows);
+    // Preserve optimistic picks: if local has a character but sheet doesn't, keep local
+    if (draftData.length > 0 && freshDraft.length > 0) {
+      for (let i = 0; i < freshDraft.length; i++) {
+        if (!freshDraft[i].character && draftData[i]?.character) {
+          freshDraft[i].character = draftData[i].character;
+        }
+      }
+    }
+    draftData = freshDraft;
+    roundsData = parseRounds(roundRows);
+    dot.classList.remove('error');
+    statusText.textContent = 'Updated ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    renderAll();
+  } catch (e) {
+    dot.classList.add('error');
+    statusText.textContent = 'Refresh failed';
+    console.error(e);
+  }
+  btn.classList.remove('spinning');
+}
+
+// --- Scoring ---
+
+function calculateScores() {
+  const scores = {};
+  const breakdown = {};
+  PLAYERS.forEach(p => {
+    scores[p] = 0;
+    breakdown[p] = { teamWins: 0, soloWins: 0, groomSlayer: 0, ringerSlayer: 0, firstBlood: 0, spiked: 0 };
+  });
+
+  for (const rd of roundsData) {
+    const hasResults = PLAYERS.some(p => rd.placements[p] !== null);
+    if (!hasResults) continue;
+
+    // Find 1st place
+    const firstPlace = PLAYERS.filter(p => rd.placements[p] === 1);
+
+    if (firstPlace.length > 0) {
+      const winner = firstPlace[0];
+      const isTeamMember = winner === 'Steven' || winner === rd.teammate;
+
+      if (rd.round === 6) {
+        // Finale is 1v1 - just award solo win
+        scores[winner] += 5;
+        breakdown[winner].soloWins++;
+      } else if (isTeamMember) {
+        // Team win
+        scores['Steven'] += 5;
+        breakdown['Steven'].teamWins++;
+        if (rd.teammate && rd.teammate !== 'Steven') {
+          scores[rd.teammate] += 5;
+          breakdown[rd.teammate].teamWins++;
+        }
+      } else {
+        // Solo win
+        scores[winner] += 5;
+        breakdown[winner].soloWins++;
+      }
+    }
+
+    // Bonus points
+    if (rd.groomSlayer && scores[rd.groomSlayer] !== undefined) {
+      scores[rd.groomSlayer] += 1;
+      breakdown[rd.groomSlayer].groomSlayer++;
+    }
+    if (rd.ringerSlayer && scores[rd.ringerSlayer] !== undefined) {
+      scores[rd.ringerSlayer] += 2;
+      breakdown[rd.ringerSlayer].ringerSlayer++;
+    }
+    if (rd.firstBlood && scores[rd.firstBlood] !== undefined) {
+      scores[rd.firstBlood] += 1;
+      breakdown[rd.firstBlood].firstBlood++;
+    }
+    if (rd.spiked && scores[rd.spiked] !== undefined) {
+      scores[rd.spiked] -= 1;
+      breakdown[rd.spiked].spiked++;
+    }
+  }
+
+  return { scores, breakdown };
+}
+
+function getSortedLeaderboard() {
+  const { scores, breakdown } = calculateScores();
+  return PLAYERS
+    .map(p => ({ name: p, score: scores[p], breakdown: breakdown[p] }))
+    .sort((a, b) => b.score - a.score);
+}
+
+// --- Rendering ---
+
+function renderAll() {
+  renderLeaderboard();
+  renderPunishments();
+  renderRoundNav();
+  renderRoundDetail();
+  renderDraft();
+}
+
+function renderLeaderboard() {
+  const lb = getSortedLeaderboard();
+  const el = document.getElementById('leaderboard-content');
+  if (lb.every(p => p.score === 0)) {
+    el.innerHTML = '<div class="empty-state"><div class="icon">&#127942;</div><p>No scores yet. Play some games!</p></div>';
+    return;
+  }
+
+  el.innerHTML = lb.map((p, i) => {
+    const rank = i + 1;
+    const tag = PLAYER_TAGS[p.name]
+      ? `<span class="lb-tag tag-${PLAYER_TAGS[p.name]}">Bachelor</span>`
+      : '';
+    const bd = p.breakdown;
+    const parts = [];
+    if (bd.teamWins) parts.push(`${bd.teamWins}tw`);
+    if (bd.soloWins) parts.push(`${bd.soloWins}sw`);
+    if (bd.firstBlood) parts.push(`${bd.firstBlood}fb`);
+    if (bd.groomSlayer) parts.push(`${bd.groomSlayer}gs`);
+    if (bd.ringerSlayer) parts.push(`${bd.ringerSlayer}cs`);
+    if (bd.spiked) parts.push(`-${bd.spiked}sp`);
+
+    return `<div class="lb-row">
+      <div class="lb-rank r${rank}">${rank}</div>
+      <div class="lb-name">${p.name}${tag}</div>
+      <div class="lb-breakdown">${parts.join(' ')}</div>
+      <div class="lb-points">${p.score}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderPunishments() {
+  const el = document.getElementById('punishments-content');
+  const completedRounds = roundsData.filter(rd =>
+    PLAYERS.some(p => rd.placements[p] !== null)
+  );
+
+  if (completedRounds.length === 0) {
+    el.innerHTML = '<div class="empty-state"><p>No rounds completed yet</p></div>';
+    return;
+  }
+
+  const items = [];
+  for (const rd of completedRounds) {
+    // 5th place - pool dip
+    const fifth = PLAYERS.find(p => rd.placements[p] === 5);
+    if (fifth) {
+      items.push(`<div class="punishment punishment-pool"><strong>Round ${rd.round} - Guerneville Dip</strong>${fifth} placed 5th &rarr; pool time!</div>`);
+    }
+
+    // Ringer wins - check if Cory got 1st and it was a solo win
+    const coryPlace = rd.placements['Cory'];
+    if (coryPlace === 1 && rd.teammate !== 'Cory') {
+      items.push(`<div class="punishment punishment-shot"><strong>Round ${rd.round} - Cory Debuff</strong>Cory won &rarr; victory shot!</div>`);
+    }
+  }
+
+  el.innerHTML = items.length ? items.join('') : '<div class="empty-state"><p>No punishments triggered yet</p></div>';
+}
+
+function renderRoundNav() {
+  const el = document.getElementById('round-nav');
+  el.innerHTML = [1, 2, 3, 4, 5, 6].map(r => {
+    const rd = roundsData.find(d => d.round === r);
+    const completed = rd && PLAYERS.some(p => rd.placements[p] !== null);
+    const classes = ['round-btn'];
+    if (r === selectedRound) classes.push('active');
+    if (completed) classes.push('completed');
+    return `<button class="${classes.join(' ')}" onclick="selectRound(${r})">R${r}</button>`;
+  }).join('');
+}
+
+function renderRoundDetail() {
+  const el = document.getElementById('round-detail');
+  const roundInfo = ROUND_PHASES[selectedRound];
+  const rd = roundsData.find(d => d.round === selectedRound);
+  const hasResults = rd && PLAYERS.some(p => rd.placements[p] !== null);
+
+  let html = `<span class="round-phase phase-${roundInfo.phase}">${roundInfo.label}</span>`;
+
+  // Phase-specific info
+  if (selectedRound === 6) {
+    // Finale
+    const { scores } = calculateScores();
+    // Calculate scores through round 5 only
+    const lb = PLAYERS
+      .map(p => ({ name: p, score: scores[p] }))
+      .sort((a, b) => b.score - a.score);
+    const finalists = lb.slice(0, 2);
+
+    html += `<div class="finale-callout">
+      <h3>THE FINALE</h3>
+      <p>1v1 between the top two point leaders</p>
+      <div class="finale-vs">
+        <span>${finalists[0]?.name || '???'}</span>
+        <span class="vs">VS</span>
+        <span>${finalists[1]?.name || '???'}</span>
+      </div>
+    </div>`;
+  } else {
+    // Team display
+    let teammate = rd?.teammate || '';
+    let showTeammatePicker = false;
+    if (selectedRound === 1 && !teammate) {
+      showTeammatePicker = currentPlayer === 'Steven';
+      teammate = showTeammatePicker ? '' : 'Steven picks...';
+    } else if (!teammate && selectedRound > 1) {
+      // Auto-determined from previous round's 5th place
+      const prevRd = roundsData.find(d => d.round === selectedRound - 1);
+      if (prevRd) {
+        const fifth = PLAYERS.find(p => prevRd.placements[p] === 5);
+        if (fifth) teammate = `${fifth} (auto: 5th last round)`;
+      }
+    }
+
+    if (showTeammatePicker) {
+      // Steven picks his Round 1 teammate
+      const eligible = PLAYERS.filter(p => p !== 'Steven' && p !== 'Cory');
+      html += `<div class="card">
+        <div class="card-title">Choose Your Teammate</div>
+        <div style="text-align:center;color:var(--muted);font-size:13px;margin-bottom:12px">Steven, pick your Round 1 wingman (not Cory)</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">
+          ${eligible.map(p => `<button class="pick-chip" style="flex:1;min-width:80px;padding:14px;font-size:16px;font-weight:700;text-align:center" onclick="pickTeammate('${p}')">${p}</button>`).join('')}
+        </div>
+      </div>`;
+    }
+
+    const soloPlayers = PLAYERS.filter(p => p !== 'Steven' && p !== (rd?.teammate || ''));
+    html += `<div class="team-display">
+      <div class="team-card team-groom">
+        <div class="team-label">Groom's Team</div>
+        <div class="team-players">Steven + ${teammate || '???'}</div>
+      </div>
+      <div class="team-card team-solo">
+        <div class="team-label">Solo Assassins</div>
+        <div class="team-players">${soloPlayers.join(', ')}</div>
+      </div>
+    </div>`;
+  }
+
+  // Selection order for Phase 2
+  if (selectedRound >= 4 && selectedRound <= 5) {
+    const { scores } = calculateScores();
+    const ordered = PLAYERS
+      .map(p => ({ name: p, score: scores[p] }))
+      .sort((a, b) => a.score - b.score);
+
+    html += `<div class="card">
+      <div class="card-title">Character Selection Order</div>
+      <div class="selection-order">
+        ${ordered.map((p, i) => `
+          <div class="selection-item">
+            <div class="selection-number">${i + 1}</div>
+            <span>${p.name}</span>
+            <span style="color:var(--muted);font-size:12px;margin-left:auto">${p.score} pts</span>
+          </div>
+        `).join('')}
+      </div>
+    </div>`;
+  }
+
+  // Draft character restrictions for Phase 1
+  if (selectedRound >= 1 && selectedRound <= 3) {
+    const playerChars = {};
+    PLAYERS.forEach(p => { playerChars[p] = []; });
+    draftData.forEach(d => {
+      if (d.character && playerChars[d.player] !== undefined) {
+        playerChars[d.player].push(d.character);
+      }
+    });
+
+    // Show which drafted characters each player has used in prior rounds
+    const usedChars = {};
+    PLAYERS.forEach(p => { usedChars[p] = []; });
+    roundsData.forEach(r => {
+      if (r.round < selectedRound && r.chars) {
+        PLAYERS.forEach(p => {
+          if (r.chars[p]) usedChars[p].push(r.chars[p]);
+        });
+      }
+    });
+
+    const charItems = PLAYERS.map(p => {
+      const pool = playerChars[p];
+      if (pool.length === 0) return '';
+      const charTags = pool.map(c => {
+        const used = usedChars[p].includes(c);
+        return `<span class="draft-char" style="${used ? 'opacity:0.4;text-decoration:line-through' : ''}">${c}</span>`;
+      }).join('');
+      return `<div style="display:flex;align-items:center;gap:8px;padding:4px 0">
+        <span style="min-width:60px;font-weight:600;font-size:13px">${p}</span>
+        <div style="display:flex;gap:4px;flex-wrap:wrap">${charTags}</div>
+      </div>`;
+    }).filter(Boolean).join('');
+
+    if (charItems) {
+      html += `<div class="card">
+        <div class="card-title">Available Draft Characters</div>
+        ${charItems}
+      </div>`;
+    }
+  }
+
+  // Results table
+  if (hasResults) {
+    const sorted = PLAYERS
+      .filter(p => rd.placements[p] !== null)
+      .sort((a, b) => (rd.placements[a] || 99) - (rd.placements[b] || 99));
+
+    html += `<div class="card">
+      <div class="card-title">Results</div>
+      <table class="results-table">
+        <thead><tr><th>Place</th><th>Player</th><th>Character</th><th>Bonus</th></tr></thead>
+        <tbody>
+          ${sorted.map(p => {
+            const place = rd.placements[p];
+            const bonuses = [];
+            if (rd.firstBlood === p) bonuses.push('<span class="bonus-tag" style="background:var(--gold);color:#000">1st Blood</span>');
+            if (rd.groomSlayer === p) bonuses.push('<span class="bonus-tag bonus-groom">Groom KO</span>');
+            if (rd.ringerSlayer === p) bonuses.push('<span class="bonus-tag bonus-ringer">Cory KO</span>');
+            if (rd.spiked === p) bonuses.push('<span class="bonus-tag" style="background:#666;color:#fff">Spiked -1</span>');
+            const isTeam = p === 'Steven' || p === rd.teammate;
+            return `<tr>
+              <td class="place-${place}">${place}${place === 1 ? 'st' : place === 2 ? 'nd' : place === 3 ? 'rd' : 'th'}</td>
+              <td class="place-${place}">${p} ${isTeam && selectedRound !== 6 ? '<span style="color:var(--teal);font-size:10px">TEAM</span>' : ''}</td>
+              <td>${rd.chars[p] || '-'}</td>
+              <td>${bonuses.join(' ') || '-'}</td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>`;
+  } else {
+    html += `<div class="card"><div class="empty-state"><div class="icon">&#127918;</div><p>Waiting for results...<br>Enter placements in the Google Sheet</p></div></div>`;
+  }
+
+  el.innerHTML = html;
+}
+
+function renderDraft() {
+  const el = document.getElementById('draft-live');
+
+  // Find current pick (first pick without a character)
+  const currentPickIdx = draftData.findIndex(d => !d.character);
+  const draftComplete = currentPickIdx === -1 || draftData.length === 0;
+  const currentPickPlayer = draftComplete ? null : draftData[currentPickIdx]?.player;
+  const isMyTurn = !draftComplete && currentPlayer && currentPickPlayer === currentPlayer;
+  const draftNotStarted = draftData.length === 0;
+
+  // Which snake round? 0-4 = Round 1, 5-9 = Round 2, 10-14 = Round 3
+  const snakeRound = draftComplete ? 3 : Math.floor(currentPickIdx / 5) + 1;
+  const pickInRound = draftComplete ? 5 : (currentPickIdx % 5) + 1;
+
+  // Build progress pips (15 total)
+  const pips = Array.from({ length: 15 }, (_, i) => {
+    if (draftComplete || i < currentPickIdx) return '<div class="draft-pip done"></div>';
+    if (i === currentPickIdx) return '<div class="draft-pip current"></div>';
+    return '<div class="draft-pip"></div>';
+  }).join('');
+
+  // Hero section
+  let heroTitle = '';
+  let heroClass = '';
+  let heroSub = '';
+  if (draftNotStarted) {
+    heroTitle = 'Draft Not Started';
+    heroClass = 'waiting';
+    heroSub = 'Waiting for data...';
+  } else if (draftComplete) {
+    heroTitle = 'Draft Complete!';
+    heroClass = 'complete';
+    heroSub = 'All 15 picks are locked in';
+  } else if (isMyTurn) {
+    heroTitle = `Your Pick, ${currentPlayer}!`;
+    heroClass = 'your-turn';
+    heroSub = `Pick ${currentPickIdx + 1} of 15`;
+  } else {
+    heroTitle = `${currentPickPlayer}'s Turn`;
+    heroClass = 'waiting';
+    heroSub = `Pick ${currentPickIdx + 1} of 15 &middot; refreshing automatically`;
+  }
+
+  let html = `
+    <div class="draft-hero">
+      <div class="draft-round-badge">Snake Draft &middot; Round ${snakeRound} of 3</div>
+      <div class="draft-hero-title ${heroClass}">${heroTitle}</div>
+      <div class="draft-hero-sub">${heroSub}</div>
+      <div class="draft-progress">${pips}</div>
+    </div>`;
+
+  // If it's your turn, show the character picker
+  if (isMyTurn) {
+    const drafted = new Set(draftData.map(d => d.character).filter(Boolean));
+    const searchId = 'draft-pick-search';
+    html += `
+      <div class="card">
+        <div class="card-title">Choose Your Character</div>
+        <input type="text" class="pick-search" id="${searchId}" placeholder="Search characters..." oninput="filterPickGrid()">
+        <div class="pick-grid" id="pick-grid"></div>
+      </div>`;
+  }
+
+  // Pick history - show all 15 picks with status
+  html += `<div class="card">
+    <div class="card-title">Draft Board</div>
+    <ul class="pick-history">`;
+
+  for (let round = 0; round < 3; round++) {
+    html += `<li style="padding:6px 0;border-bottom:1px solid var(--card-border)">
+      <span style="font-size:11px;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:1px">
+        Round ${round + 1}      </span>
+    </li>`;
+    for (let i = 0; i < 5; i++) {
+      const pickIdx = round * 5 + i;
+      const d = draftData[pickIdx];
+      const player = d?.player || SNAKE_DRAFT_ORDER[pickIdx];
+      const char = d?.character || '';
+      const isCurrent = pickIdx === currentPickIdx && !draftComplete;
+      const isDone = char !== '';
+      const numClass = isDone ? 'done' : (isCurrent ? 'current' : '');
+      const youTag = player === currentPlayer ? '<span class="pick-you">YOU</span>' : '';
+      html += `<li class="pick-history-item">
+        <span class="pick-num ${numClass}">${pickIdx + 1}</span>
+        <span class="pick-player">${player} ${youTag}</span>
+        <span class="pick-char ${char ? '' : 'empty'}">${char || (isCurrent ? 'On the clock...' : 'TBD')}</span>
+      </li>`;
+    }
+  }
+  html += '</ul></div>';
+
+  // Character pools summary
+  const pools = {};
+  PLAYERS.forEach(p => { pools[p] = []; });
+  draftData.forEach(d => {
+    if (pools[d.player] !== undefined && d.character) {
+      pools[d.player].push(d.character);
+    }
+  });
+
+  html += `<div class="card">
+    <div class="card-title">Character Pools</div>
+    <div class="draft-grid">`;
+  html += PLAYERS.map(p => {
+    const chars = pools[p];
+    const isOnClock = p === currentPickPlayer && !draftComplete;
+    const charHtml = [0, 1, 2].map(i => {
+      const c = chars[i];
+      return c
+        ? `<span class="draft-char">${c}</span>`
+        : `<span class="draft-char empty">--</span>`;
+    }).join('');
+    const tag = PLAYER_TAGS[p]
+      ? `<span class="lb-tag tag-${PLAYER_TAGS[p]}" style="font-size:9px">Bachelor</span>`
+      : '';
+    const clockStyle = isOnClock ? 'border-color: var(--green); box-shadow: 0 0 12px rgba(46,213,115,0.2)' : '';
+    return `<div class="draft-player-card" style="${clockStyle}">
+      <div class="draft-player-name">${p} ${tag}</div>
+      <div class="draft-chars">${charHtml}</div>
+    </div>`;
+  }).join('');
+  html += '</div></div>';
+
+  el.innerHTML = html;
+
+  // Populate pick grid if it's your turn
+  if (isMyTurn) {
+    window._currentPickIdx = currentPickIdx;
+    filterPickGrid();
+  }
+}
+
+function filterPickGrid() {
+  const searchEl = document.getElementById('draft-pick-search');
+  const search = (searchEl?.value || '').toLowerCase();
+  const drafted = new Set(draftData.map(d => d.character).filter(Boolean));
+  const pickIdx = window._currentPickIdx;
+
+  const filtered = search
+    ? ROSTER.filter(c => c.toLowerCase().includes(search))
+    : ROSTER;
+
+  document.getElementById('pick-grid').innerHTML = filtered.map(c => {
+    const isDrafted = drafted.has(c);
+    if (isDrafted) {
+      return `<span class="pick-chip unavailable">${c}</span>`;
+    }
+    return `<span class="pick-chip" onclick="selectCharacter('${c.replace(/'/g, "\\'")}', ${pickIdx + 1})">${c}</span>`;
+  }).join('');
+}
+
+// --- Character Pick Flow ---
+
+function selectCharacter(character, pickNum) {
+  pendingPick = { pick: pickNum, character };
+  document.getElementById('confirm-char-name').textContent = character;
+  document.getElementById('confirm-pick-info').textContent = `Pick #${pickNum} for ${currentPlayer}`;
+  document.getElementById('btn-confirm').disabled = false;
+  document.getElementById('btn-confirm').textContent = 'Lock In';
+  document.getElementById('confirm-overlay').style.display = 'flex';
+}
+
+function cancelPick() {
+  pendingPick = null;
+  document.getElementById('confirm-overlay').style.display = 'none';
+}
+
+function submitPick(pickData) {
+  // Use a hidden iframe + form POST to avoid CORS entirely.
+  // Apps Script handles the POST and writes to the sheet.
+  // We can't read the response, but we verify via sheet refresh.
+  return new Promise((resolve) => {
+    const iframe = document.createElement('iframe');
+    iframe.name = 'pick-frame-' + Date.now();
+    iframe.style.display = 'none';
+    document.body.appendChild(iframe);
+
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = APPS_SCRIPT_URL;
+    form.target = iframe.name;
+
+    // Apps Script reads form fields from e.parameter when Content-Type is form
+    const addField = (name, value) => {
+      const input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = name;
+      input.value = value;
+      form.appendChild(input);
+    };
+
+    addField('pick', pickData.pick);
+    addField('character', pickData.character);
+
+    document.body.appendChild(form);
+    form.submit();
+
+    // Clean up after a delay and resolve
+    setTimeout(() => {
+      form.remove();
+      iframe.remove();
+      resolve();
+    }, 3000);
+  });
+}
+
+async function confirmPick() {
+  if (!pendingPick || !APPS_SCRIPT_URL) {
+    if (!APPS_SCRIPT_URL) {
+      alert('Apps Script URL not configured.');
+    }
+    return;
+  }
+
+  const btn = document.getElementById('btn-confirm');
+  btn.disabled = true;
+  btn.textContent = 'Submitting...';
+
+  const pickData = { pick: pendingPick.pick, character: pendingPick.character };
+
+  try {
+    // Optimistically update local state immediately
+    const idx = draftData.findIndex(d => d.pick === pickData.pick);
+    if (idx !== -1) {
+      draftData[idx].character = pickData.character;
+    }
+
+    pendingPick = null;
+    document.getElementById('confirm-overlay').style.display = 'none';
+
+    // Pause auto-refresh so it doesn't overwrite optimistic update
+    window._lastRefresh = Date.now() + 8000;
+    renderDraft();
+
+    // Fire the form POST (no CORS issues)
+    await submitPick(pickData);
+
+    // Verify from sheet after write propagates
+    setTimeout(refreshData, 5000);
+  } catch (err) {
+    console.error('Pick submission failed:', err);
+    // Revert optimistic update
+    const idx = draftData.findIndex(d => d.pick === pickData.pick);
+    if (idx !== -1) {
+      draftData[idx].character = '';
+    }
+    renderDraft();
+    alert('Pick failed to submit. Please try again.');
+  }
+}
+
+// --- Teammate Pick (Round 1, Steven only) ---
+
+async function pickTeammate(player) {
+  if (!confirm(`Pick ${player} as your Round 1 teammate?`)) return;
+
+  // Write to Rounds sheet: row 2 (round 1), column 2 (Teammate)
+  const params = new URLSearchParams({
+    action: 'teammate',
+    round: 1,
+    teammate: player
+  });
+  const getUrl = APPS_SCRIPT_URL + '?' + params.toString();
+
+  try {
+    const resp = await fetch(getUrl);
+    const result = await resp.json();
+    if (result.success) {
+      // Optimistic update
+      const rd = roundsData.find(d => d.round === 1);
+      if (rd) rd.teammate = player;
+      window._lastRefresh = Date.now() + 8000;
+      renderAll();
+      setTimeout(refreshData, 3000);
+    } else {
+      alert('Failed to save teammate: ' + (result.error || 'unknown error'));
+    }
+  } catch (err) {
+    // Fallback: form POST via iframe
+    await submitPick({ action: 'teammate', round: 1, teammate: player });
+    const rd = roundsData.find(d => d.round === 1);
+    if (rd) rd.teammate = player;
+    window._lastRefresh = Date.now() + 8000;
+    renderAll();
+    setTimeout(refreshData, 5000);
+  }
+}
+
+// --- Identity ---
+
+function showIdentityPicker() {
+  const btns = PLAYERS.map(p => {
+    const tag = PLAYER_TAGS[p]
+      ? `<span class="tag" style="color:var(--teal)">(Bachelor)</span>`
+      : '';
+    return `<button class="identity-btn" onclick="setIdentity('${p}')">${p} ${tag}</button>`;
+  }).join('');
+  document.getElementById('identity-buttons').innerHTML = btns;
+  document.getElementById('identity-overlay').style.display = 'flex';
+}
+
+function setIdentity(player) {
+  currentPlayer = player;
+  localStorage.setItem('purplepillar_player', player);
+  document.getElementById('identity-overlay').style.display = 'none';
+  updateIdentityBadge();
+  renderDraft();
+}
+
+function updateIdentityBadge() {
+  const badge = document.getElementById('identity-badge');
+  if (currentPlayer) {
+    badge.textContent = currentPlayer;
+    badge.style.display = 'inline-block';
+    badge.style.cursor = 'pointer';
+    badge.onclick = showIdentityPicker;
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+// --- Navigation ---
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+
+  const views = ['leaderboard', 'rounds', 'draft', 'rules'];
+  const idx = views.indexOf(tab);
+  document.querySelectorAll('.tab')[idx].classList.add('active');
+  document.getElementById(`view-${tab}`).classList.add('active');
+}
+
+function selectRound(r) {
+  selectedRound = r;
+  renderRoundNav();
+  renderRoundDetail();
+}
+
+// --- Init ---
+
+(async function init() {
+  // Show identity picker if not set
+  if (!currentPlayer) {
+    showIdentityPicker();
+  }
+  updateIdentityBadge();
+
+  await refreshData();
+
+  // If draft is in progress, auto-switch to draft tab
+  const draftInProgress = draftData.some(d => !d.character);
+  if (draftInProgress) {
+    switchTab('draft');
+  }
+
+  // Auto-refresh: faster during draft (every 5s), slower otherwise (30s)
+  setInterval(() => {
+    const drafting = draftData.some(d => !d.character);
+    const interval = drafting ? 5000 : 30000;
+    if (!window._lastRefresh || Date.now() - window._lastRefresh >= interval) {
+      window._lastRefresh = Date.now();
+      refreshData();
+    }
+  }, 5000);
+  window._lastRefresh = Date.now();
+})();
+</script>
+</body>
+</html>
