@@ -1653,14 +1653,24 @@ function renderPunishments() {
   }
 
   const items = [];
-  for (const rd of completedRounds) {
-    // 5th place - pool dip
-    const fifth = PLAYERS.find(p => rd.placements[p] === 5);
-    if (fifth) {
-      items.push(`<div class="punishment punishment-pool"><strong>Round ${rd.round} - Guerneville Dip</strong>${fifth} placed 5th &rarr; pool time!</div>`);
-    }
 
-    // Ringer wins - check if Cory got 1st and it was a solo win
+  // Most recent round determines active punishments
+  const latest = completedRounds.sort((a, b) => b.round - a.round)[0];
+
+  // 5th place - pool dip (most recent round)
+  const fifth = PLAYERS.find(p => latest.placements[p] === 5);
+  if (fifth) {
+    items.push(`<div class="punishment punishment-pool"><strong>Guerneville Dip</strong>${fifth} placed 5th in Round ${latest.round} &rarr; pool time!</div>`);
+  }
+
+  // 4th place - asshole serves drinks (most recent round)
+  const fourth = PLAYERS.find(p => latest.placements[p] === 4);
+  if (fourth) {
+    items.push(`<div class="punishment punishment-drink"><strong>The Asshole</strong>${fourth} placed 4th in Round ${latest.round} &rarr; replenish beverages!</div>`);
+  }
+
+  // Cory debuff - check all rounds
+  for (const rd of completedRounds) {
     const coryPlace = rd.placements['Cory'];
     if (coryPlace === 1 && rd.teammate !== 'Cory') {
       items.push(`<div class="punishment punishment-shot"><strong>Round ${rd.round} - Cory Debuff</strong>Cory won &rarr; victory shot!</div>`);
