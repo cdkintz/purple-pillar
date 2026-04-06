@@ -1878,7 +1878,22 @@ function switchTab(tab) {
   const idx = views.indexOf(tab);
   document.querySelectorAll('.tab')[idx].classList.add('active');
   document.getElementById(`view-${tab}`).classList.add('active');
+
+  // Update URL hash without triggering hashchange
+  const hashMap = { leaderboard: 'scores', rounds: 'rounds', draft: 'draft', rules: 'rules' };
+  history.replaceState(null, '', '#' + hashMap[tab]);
 }
+
+function getTabFromHash() {
+  const hash = location.hash.replace('#', '').toLowerCase();
+  const map = { scores: 'leaderboard', rounds: 'rounds', draft: 'draft', rules: 'rules' };
+  return map[hash] || null;
+}
+
+window.addEventListener('hashchange', () => {
+  const tab = getTabFromHash();
+  if (tab) switchTab(tab);
+});
 
 function selectRound(r) {
   selectedRound = r;
@@ -1897,10 +1912,15 @@ function selectRound(r) {
 
   await refreshData();
 
-  // If draft is in progress, auto-switch to draft tab
-  const draftInProgress = draftData.some(d => !d.character);
-  if (draftInProgress) {
-    switchTab('draft');
+  // Check URL hash first, otherwise auto-switch to draft if in progress
+  const hashTab = getTabFromHash();
+  if (hashTab) {
+    switchTab(hashTab);
+  } else {
+    const draftInProgress = draftData.some(d => !d.character);
+    if (draftInProgress) {
+      switchTab('draft');
+    }
   }
 
   // Auto-refresh: faster during draft (every 5s), slower otherwise (30s)
