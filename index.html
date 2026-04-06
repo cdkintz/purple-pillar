@@ -719,6 +719,259 @@
   .pick-char.empty { color: var(--muted); font-style: italic; }
   .pick-you { color: var(--primary); font-size: 10px; font-weight: 700; }
 
+  /* Round Result Wizard */
+  .wizard-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    background: var(--bg);
+    overflow-y: auto;
+    padding: 16px;
+    padding-bottom: 100px;
+  }
+  .wizard-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .wizard-header h2 {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--primary);
+  }
+  .wizard-close {
+    background: none;
+    border: 1px solid var(--card-border);
+    color: var(--muted);
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  .wizard-step-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .wizard-step-title {
+    font-size: 20px;
+    font-weight: 800;
+    margin-bottom: 4px;
+  }
+  .wizard-step-sub {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 16px;
+  }
+  .elim-list {
+    list-style: none;
+    padding: 0;
+    margin-bottom: 16px;
+  }
+  .elim-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    margin-bottom: 6px;
+    border-radius: 10px;
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .elim-item:hover { border-color: var(--primary); }
+  .elim-item.eliminated {
+    opacity: 0.4;
+    pointer-events: none;
+    text-decoration: line-through;
+  }
+  .elim-item .elim-badge {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 800;
+    flex-shrink: 0;
+    background: var(--card-border);
+    color: var(--muted);
+  }
+  .elim-item.eliminated .elim-badge { background: var(--red); color: #fff; }
+  .elim-order-list {
+    margin-bottom: 16px;
+  }
+  .elim-order-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 0;
+    font-size: 14px;
+  }
+  .elim-order-num {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 800;
+    background: var(--red);
+    color: #fff;
+    flex-shrink: 0;
+  }
+  .elim-undo {
+    margin-left: auto;
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 12px;
+    cursor: pointer;
+    text-decoration: underline;
+  }
+  .char-pick-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    margin-bottom: 6px;
+    border-radius: 10px;
+    background: var(--card);
+    border: 1px solid var(--card-border);
+  }
+  .char-pick-name {
+    font-weight: 600;
+    font-size: 15px;
+    min-width: 70px;
+  }
+  .char-pick-select {
+    flex: 1;
+    padding: 8px 10px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--card-border);
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 14px;
+    outline: none;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+  .char-pick-select:focus { border-color: var(--primary); }
+  .bonus-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .bonus-card {
+    padding: 12px;
+    border-radius: 10px;
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .bonus-card.active {
+    border-color: var(--primary);
+    background: rgba(180, 74, 223, 0.15);
+  }
+  .bonus-card-label {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+    color: var(--muted);
+  }
+  .bonus-card.active .bonus-card-label { color: var(--primary); }
+  .bonus-card-player {
+    font-size: 15px;
+    font-weight: 600;
+    min-height: 22px;
+  }
+  .bonus-player-btn {
+    display: inline-block;
+    padding: 4px 10px;
+    margin: 2px;
+    border-radius: 6px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid var(--card-border);
+    color: var(--text);
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .bonus-player-btn:hover { border-color: var(--primary); }
+  .bonus-player-btn.selected {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #fff;
+  }
+  .wizard-nav {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+  }
+  .wizard-btn {
+    flex: 1;
+    padding: 14px;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    border: none;
+    transition: opacity 0.2s;
+  }
+  .wizard-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+  .wizard-btn:active { opacity: 0.7; }
+  .wizard-btn-back {
+    background: var(--card-border);
+    color: var(--text);
+  }
+  .wizard-btn-next {
+    background: var(--primary);
+    color: #fff;
+  }
+  .wizard-btn-submit {
+    background: var(--green);
+    color: #000;
+  }
+  .wizard-review-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(54, 37, 82, 0.5);
+    font-size: 14px;
+  }
+  .wizard-review-row:last-child { border-bottom: none; }
+  .record-btn {
+    display: block;
+    width: 100%;
+    padding: 16px;
+    border: 2px dashed var(--primary);
+    background: rgba(180, 74, 223, 0.08);
+    color: var(--primary);
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s;
+    margin-top: 12px;
+  }
+  .record-btn:hover { background: rgba(180, 74, 223, 0.15); }
+
   /* Password gate */
   .pw-overlay {
     position: fixed;
@@ -826,6 +1079,11 @@
 </style>
 </head>
 <body>
+
+<!-- ROUND RESULT WIZARD -->
+<div class="wizard-overlay" id="wizard-overlay" style="display:none">
+  <div id="wizard-content"></div>
+</div>
 
 <!-- PASSWORD GATE -->
 <div class="pw-overlay" id="pw-overlay">
@@ -1553,7 +1811,9 @@ function renderRoundDetail() {
       </table>
     </div>`;
   } else {
-    html += `<div class="card"><div class="empty-state"><div class="icon">&#127918;</div><p>Waiting for results...<br>Enter placements in the Google Sheet</p></div></div>`;
+    html += `<div class="card"><div class="empty-state"><div class="icon">&#127918;</div><p>No results yet</p></div>
+      <button class="record-btn" onclick="openWizard(${selectedRound})">Record Round ${selectedRound} Results</button>
+    </div>`;
   }
 
   el.innerHTML = html;
@@ -1843,6 +2103,311 @@ async function pickTeammate(player) {
     if (rd) rd.teammate = player;
     window._lastRefresh = Date.now() + 8000;
     renderAll();
+    setTimeout(refreshData, 5000);
+  }
+}
+
+// --- Round Result Wizard ---
+
+let wizardState = {
+  round: null,
+  step: 0, // 0=elimination, 1=bonuses, 2=review
+  elimOrder: [], // players in order of elimination (first = 5th place)
+  firstBlood: '',
+  groomSlayer: '',
+  ringerSlayer: '',
+  spiked: ''
+};
+
+function openWizard(round) {
+  wizardState = {
+    round,
+    step: 0,
+    elimOrder: [],
+    firstBlood: '',
+    groomSlayer: '',
+    ringerSlayer: '',
+    spiked: ''
+  };
+  document.getElementById('wizard-overlay').style.display = '';
+  renderWizard();
+}
+
+function closeWizard() {
+  document.getElementById('wizard-overlay').style.display = 'none';
+}
+
+function renderWizard() {
+  const el = document.getElementById('wizard-content');
+  const s = wizardState;
+
+  let html = `<div class="wizard-header">
+    <h2>Round ${s.round} Results</h2>
+    <button class="wizard-close" onclick="closeWizard()">Cancel</button>
+  </div>`;
+
+  if (s.step === 0) {
+    html += renderElimStep();
+  } else if (s.step === 1) {
+    html += renderBonusStep();
+  } else if (s.step === 2) {
+    html += renderReviewStep();
+  }
+
+  el.innerHTML = html;
+}
+
+function renderElimStep() {
+  const s = wizardState;
+  const remaining = PLAYERS.filter(p => !s.elimOrder.includes(p));
+
+  let html = `<div class="wizard-step-label">Step 1 of 3</div>
+    <div class="wizard-step-title">Elimination Order</div>
+    <div class="wizard-step-sub">Tap players in the order they were eliminated (first out = 5th place)</div>`;
+
+  // Show elimination log
+  if (s.elimOrder.length > 0) {
+    html += '<div class="elim-order-list">';
+    s.elimOrder.forEach((p, i) => {
+      const place = 5 - i;
+      const suffix = place === 1 ? 'st' : place === 2 ? 'nd' : place === 3 ? 'rd' : 'th';
+      html += `<div class="elim-order-item">
+        <span class="elim-order-num">${place}</span>
+        <span>${p}</span>
+        <span style="color:var(--muted);font-size:12px">${place}${suffix} place</span>
+        ${i === s.elimOrder.length - 1 ? '<button class="elim-undo" onclick="undoElim()">undo</button>' : ''}
+      </div>`;
+    });
+    html += '</div>';
+  }
+
+  // Show remaining players to tap
+  if (remaining.length > 1) {
+    html += '<ul class="elim-list">';
+    remaining.forEach(p => {
+      const place = 5 - s.elimOrder.length;
+      html += `<li class="elim-item" onclick="addElim('${p}')">
+        <span class="elim-badge">${place}</span>
+        <span>${p}</span>
+        <span style="color:var(--muted);font-size:12px;margin-left:auto">Tap = ${place}th place</span>
+      </li>`;
+    });
+    html += '</ul>';
+  } else if (remaining.length === 1) {
+    // Last player standing = 1st place, auto-assign
+    const winner = remaining[0];
+    html += `<div class="card" style="text-align:center;padding:20px">
+      <div style="font-size:24px;margin-bottom:4px">&#127942;</div>
+      <div style="font-size:18px;font-weight:800;color:var(--gold)">${winner} wins!</div>
+      <div style="font-size:13px;color:var(--muted)">Last player standing &mdash; 1st place</div>
+    </div>`;
+  }
+
+  const allAssigned = s.elimOrder.length >= 4; // 4 eliminated = 1 winner
+  html += `<div class="wizard-nav">
+    <button class="wizard-btn wizard-btn-back" onclick="closeWizard()">Cancel</button>
+    <button class="wizard-btn wizard-btn-next" ${allAssigned ? '' : 'disabled'} onclick="wizardNext()">Next: Bonuses</button>
+  </div>`;
+
+  return html;
+}
+
+function renderBonusStep() {
+  const s = wizardState;
+  const allPlayers = PLAYERS;
+
+  let html = `<div class="wizard-step-label">Step 2 of 3</div>
+    <div class="wizard-step-title">Bonuses & Penalties</div>
+    <div class="wizard-step-sub">Tap to assign (tap again to clear)</div>`;
+
+  const bonuses = [
+    { key: 'firstBlood', label: 'First Blood', sub: '+1 pt', color: 'var(--gold)' },
+    { key: 'groomSlayer', label: 'Groom Slayer', sub: '+1 pt (took Steven\'s last stock)', color: 'var(--teal)' },
+    { key: 'ringerSlayer', label: 'Cory Slayer', sub: '+2 pts (took Cory\'s last stock)', color: 'var(--primary)' },
+    { key: 'spiked', label: 'Spiked', sub: '-1 pt (got meteor KO\'d)', color: 'var(--red)' }
+  ];
+
+  bonuses.forEach(b => {
+    const current = s[b.key];
+    html += `<div class="card" style="margin-bottom:10px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <span style="color:${b.color};font-weight:700;font-size:14px">${b.label}</span>
+        <span style="color:var(--muted);font-size:12px">${b.sub}</span>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px">
+        ${allPlayers.map(p => {
+          const sel = current === p ? 'selected' : '';
+          return `<button class="bonus-player-btn ${sel}" onclick="toggleBonus('${b.key}','${p}')">${p}</button>`;
+        }).join('')}
+        <button class="bonus-player-btn ${!current ? 'selected' : ''}" onclick="toggleBonus('${b.key}','')">None</button>
+      </div>
+    </div>`;
+  });
+
+  html += `<div class="wizard-nav">
+    <button class="wizard-btn wizard-btn-back" onclick="wizardBack()">Back</button>
+    <button class="wizard-btn wizard-btn-next" onclick="wizardNext()">Next: Review</button>
+  </div>`;
+
+  return html;
+}
+
+function renderReviewStep() {
+  const s = wizardState;
+  const winner = PLAYERS.find(p => !s.elimOrder.includes(p));
+  const placements = {};
+  s.elimOrder.forEach((p, i) => { placements[p] = 5 - i; });
+  placements[winner] = 1;
+
+  const sorted = PLAYERS.slice().sort((a, b) => placements[a] - placements[b]);
+
+  let html = `<div class="wizard-step-label">Step 3 of 3</div>
+    <div class="wizard-step-title">Confirm Results</div>
+    <div class="wizard-step-sub">Round ${s.round}</div>`;
+
+  html += '<div class="card"><div class="card-title">Placements</div>';
+  sorted.forEach(p => {
+    const place = placements[p];
+    const suffix = place === 1 ? 'st' : place === 2 ? 'nd' : place === 3 ? 'rd' : 'th';
+    const color = place === 1 ? 'var(--gold)' : place === 2 ? 'var(--silver)' : place === 3 ? 'var(--bronze)' : place === 5 ? 'var(--red)' : 'var(--text)';
+    html += `<div class="wizard-review-row">
+      <span style="color:${color};font-weight:800;width:40px">${place}${suffix}</span>
+      <span style="font-weight:600">${p}</span>
+      ${place === 1 ? '<span style="color:var(--gold);font-size:12px;margin-left:auto">&#127942; Winner</span>' : ''}
+      ${place === 5 ? '<span style="color:var(--red);font-size:12px;margin-left:auto">Pool time</span>' : ''}
+    </div>`;
+  });
+  html += '</div>';
+
+  // Bonuses
+  const bonusList = [];
+  if (s.firstBlood) bonusList.push(`First Blood: <strong>${s.firstBlood}</strong> (+1)`);
+  if (s.groomSlayer) bonusList.push(`Groom Slayer: <strong>${s.groomSlayer}</strong> (+1)`);
+  if (s.ringerSlayer) bonusList.push(`Cory Slayer: <strong>${s.ringerSlayer}</strong> (+2)`);
+  if (s.spiked) bonusList.push(`Spiked: <strong>${s.spiked}</strong> (-1)`);
+
+  if (bonusList.length > 0) {
+    html += '<div class="card"><div class="card-title">Bonuses & Penalties</div>';
+    bonusList.forEach(b => {
+      html += `<div style="padding:4px 0;font-size:14px">${b}</div>`;
+    });
+    html += '</div>';
+  } else {
+    html += '<div class="card"><div class="card-title">Bonuses & Penalties</div><div style="color:var(--muted);font-size:13px">None</div></div>';
+  }
+
+  html += `<div class="wizard-nav">
+    <button class="wizard-btn wizard-btn-back" onclick="wizardBack()">Back</button>
+    <button class="wizard-btn wizard-btn-submit" id="wizard-submit-btn" onclick="submitRoundResult()">Submit Results</button>
+  </div>`;
+
+  return html;
+}
+
+function addElim(player) {
+  wizardState.elimOrder.push(player);
+  renderWizard();
+}
+
+function undoElim() {
+  wizardState.elimOrder.pop();
+  renderWizard();
+}
+
+function toggleBonus(key, player) {
+  wizardState[key] = wizardState[key] === player ? '' : player;
+  renderWizard();
+}
+
+function wizardNext() {
+  wizardState.step++;
+  renderWizard();
+}
+
+function wizardBack() {
+  wizardState.step--;
+  renderWizard();
+}
+
+async function submitRoundResult() {
+  const s = wizardState;
+  const btn = document.getElementById('wizard-submit-btn');
+  btn.disabled = true;
+  btn.textContent = 'Submitting...';
+
+  const winner = PLAYERS.find(p => !s.elimOrder.includes(p));
+  const placements = {};
+  s.elimOrder.forEach((p, i) => { placements[p] = 5 - i; });
+  placements[winner] = 1;
+
+  const params = new URLSearchParams({ action: 'roundResult', round: s.round });
+  PLAYERS.forEach(p => {
+    params.set('place_' + p, placements[p]);
+  });
+  if (s.groomSlayer) params.set('groomSlayer', s.groomSlayer);
+  if (s.ringerSlayer) params.set('ringerSlayer', s.ringerSlayer);
+  if (s.firstBlood) params.set('firstBlood', s.firstBlood);
+  if (s.spiked) params.set('spiked', s.spiked);
+
+  try {
+    const resp = await fetch(APPS_SCRIPT_URL + '?' + params.toString());
+    const result = await resp.json();
+    if (result.success) {
+      // Optimistic update
+      let rd = roundsData.find(d => d.round === s.round);
+      if (rd) {
+        PLAYERS.forEach(p => { rd.placements[p] = placements[p]; });
+        rd.groomSlayer = s.groomSlayer;
+        rd.ringerSlayer = s.ringerSlayer;
+        rd.firstBlood = s.firstBlood;
+        rd.spiked = s.spiked;
+      }
+      closeWizard();
+      window._lastRefresh = Date.now() + 8000;
+      renderAll();
+      setTimeout(refreshData, 4000);
+    } else {
+      btn.textContent = 'Failed - Try Again';
+      btn.disabled = false;
+    }
+  } catch (err) {
+    // Fallback: iframe form POST
+    const formData = { action: 'roundResult', round: s.round };
+    PLAYERS.forEach(p => { formData['place_' + p] = placements[p]; });
+    if (s.groomSlayer) formData.groomSlayer = s.groomSlayer;
+    if (s.ringerSlayer) formData.ringerSlayer = s.ringerSlayer;
+    if (s.firstBlood) formData.firstBlood = s.firstBlood;
+    if (s.spiked) formData.spiked = s.spiked;
+
+    const iframe = document.createElement('iframe');
+    iframe.name = 'round-frame-' + Date.now();
+    iframe.style.display = 'none';
+    document.body.appendChild(iframe);
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = APPS_SCRIPT_URL;
+    form.target = iframe.name;
+    Object.entries(formData).forEach(([k, v]) => {
+      const input = document.createElement('input');
+      input.type = 'hidden'; input.name = k; input.value = v;
+      form.appendChild(input);
+    });
+    document.body.appendChild(form);
+    form.submit();
+
+    // Optimistic update
+    let rd = roundsData.find(d => d.round === s.round);
+    if (rd) {
+      PLAYERS.forEach(p => { rd.placements[p] = placements[p]; });
+      rd.groomSlayer = s.groomSlayer;
+      rd.ringerSlayer = s.ringerSlayer;
+      rd.firstBlood = s.firstBlood;
+      rd.spiked = s.spiked;
+    }
+    closeWizard();
+    window._lastRefresh = Date.now() + 8000;
+    renderAll();
+    setTimeout(() => { form.remove(); iframe.remove(); }, 3000);
     setTimeout(refreshData, 5000);
   }
 }
