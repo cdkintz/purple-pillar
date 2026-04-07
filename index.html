@@ -1229,20 +1229,12 @@
       <div class="card rule-section">
         <h3>Stakes &amp; Punishments</h3>
         <div class="punishment punishment-pool">
-          <strong>The Guerneville Dip</strong>
-          5th place must jump into the unheated pool for 30 seconds before returning to the hot tub.
+          <strong>Last Place (5th) &mdash; The Guerneville Asshole</strong>
+          5th place must dunk their head underwater AND replenish beverages for the group until someone else takes last.
         </div>
         <div class="punishment punishment-shot">
           <strong>The Cory Debuff</strong>
-          When Cory wins Rounds 1-3, he must take a "Victory Shot" to naturally handicap his skill.
-        </div>
-        <div class="punishment punishment-drink">
-          <strong>The 3-Stock Penalty</strong>
-          Lose all 3 stocks without taking a single stock from anyone? Take a shot, put it in your mouth, get in the pool and touch the bottom &mdash; don't swallow until you've returned to the surface.
-        </div>
-        <div class="punishment punishment-pool">
-          <strong>The Asshole Rule</strong>
-          4th place overall must replenish beverages for the group.
+          When Cory wins Rounds 1-3, he must take a "Victory Shot" to naturally handicap his power.
         </div>
       </div>
     </div>
@@ -1683,16 +1675,10 @@ function renderPunishments() {
   // Most recent round determines active punishments
   const latest = completedRounds.sort((a, b) => b.round - a.round)[0];
 
-  // 5th place - pool dip (most recent round)
+  // 5th place - dunk head + serve drinks (most recent round)
   const fifth = PLAYERS.find(p => latest.placements[p] === 5);
   if (fifth) {
-    items.push(`<div class="punishment punishment-pool"><strong>Guerneville Dip</strong>${fifth} placed 5th in Round ${latest.round} &rarr; pool time!</div>`);
-  }
-
-  // 4th place - asshole serves drinks (most recent round)
-  const fourth = PLAYERS.find(p => latest.placements[p] === 4);
-  if (fourth) {
-    items.push(`<div class="punishment punishment-drink"><strong>The Asshole</strong>${fourth} placed 4th in Round ${latest.round} &rarr; replenish beverages!</div>`);
+    items.push(`<div class="punishment punishment-pool"><strong>The Guerneville Asshole</strong>${fifth} placed 5th in Round ${latest.round} &rarr; dunk your head &amp; serve drinks!</div>`);
   }
 
   // Cory debuff - check all rounds
