@@ -1524,14 +1524,14 @@ async function refreshData() {
       }
     }
     // Only re-render if data actually changed
-    const newDraftJson = JSON.stringify(freshDraft);
-    const newRoundsJson = JSON.stringify(parseRounds(roundRows));
-    const changed = newDraftJson !== JSON.stringify(draftData) || newRoundsJson !== JSON.stringify(roundsData);
+    const freshRounds = parseRounds(roundRows);
+    const draftChanged = JSON.stringify(freshDraft) !== JSON.stringify(draftData);
+    const roundsChanged = JSON.stringify(freshRounds) !== JSON.stringify(roundsData);
     draftData = freshDraft;
-    roundsData = JSON.parse(newRoundsJson);
+    roundsData = freshRounds;
     dot.classList.remove('error');
     statusText.textContent = 'Updated ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    if (changed) renderAll();
+    if (draftChanged || roundsChanged) renderAll();
   } catch (e) {
     dot.classList.add('error');
     statusText.textContent = 'Refresh failed';
