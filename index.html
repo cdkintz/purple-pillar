@@ -2124,39 +2124,18 @@ function cancelPick() {
 }
 
 function submitPick(pickData) {
-  // Use a hidden iframe + form POST to avoid CORS entirely.
-  // Apps Script handles the POST and writes to the sheet.
-  // We can't read the response, but we verify via sheet refresh.
+  // Use GET via hidden iframe src — avoids CORS and confirmed working
   return new Promise((resolve) => {
+    const params = new URLSearchParams({
+      action: 'pick',
+      pick: pickData.pick,
+      character: pickData.character
+    });
     const iframe = document.createElement('iframe');
-    iframe.name = 'pick-frame-' + Date.now();
     iframe.style.display = 'none';
+    iframe.src = APPS_SCRIPT_URL + '?' + params.toString();
     document.body.appendChild(iframe);
-
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = APPS_SCRIPT_URL;
-    form.target = iframe.name;
-
-    // Apps Script reads form fields from e.parameter when Content-Type is form
-    const addField = (name, value) => {
-      const input = document.createElement('input');
-      input.type = 'hidden';
-      input.name = name;
-      input.value = value;
-      form.appendChild(input);
-    };
-
-    addField('action', 'pick');
-    addField('pick', pickData.pick);
-    addField('character', pickData.character);
-
-    document.body.appendChild(form);
-    form.submit();
-
-    // Clean up after a delay and resolve
     setTimeout(() => {
-      form.remove();
       iframe.remove();
       resolve();
     }, 3000);
@@ -2593,25 +2572,8 @@ async function submitRoundResult() {
   if (s.firstBlood) params.set('firstBlood', s.firstBlood);
   if (s.spiked) params.set('spiked', s.spiked);
 
-  // Use iframe form POST to avoid CORS issues with Apps Script redirects
-  const formData = {};
-  params.forEach((v, k) => { formData[k] = v; });
-
-  const iframe = document.createElement('iframe');
-  iframe.name = 'round-frame-' + Date.now();
-  iframe.style.display = 'none';
-  document.body.appendChild(iframe);
-  const form = document.createElement('form');
-  form.method = 'POST';
-  form.action = APPS_SCRIPT_URL;
-  form.target = iframe.name;
-  Object.entries(formData).forEach(([k, v]) => {
-    const input = document.createElement('input');
-    input.type = 'hidden'; input.name = k; input.value = v;
-    form.appendChild(input);
-  });
-  document.body.appendChild(form);
-  form.submit();
+  // Use GET via hidden iframe src — confirmed working
+  submitViaIframe(params);
 
   // Optimistic update
   let rd = roundsData.find(d => d.round === s.round);
@@ -2626,7 +2588,6 @@ async function submitRoundResult() {
   closeWizard();
   window._lastRefresh = Date.now() + 8000;
   renderAll();
-  setTimeout(() => { form.remove(); iframe.remove(); }, 3000);
   setTimeout(refreshData, 5000);
 }
 
@@ -2690,22 +2651,12 @@ function clearDraft() {
 }
 
 function submitViaIframe(params) {
+  // Use GET via hidden iframe src — avoids CORS issues
   const iframe = document.createElement('iframe');
-  iframe.name = 'clear-frame-' + Date.now();
   iframe.style.display = 'none';
+  iframe.src = APPS_SCRIPT_URL + '?' + params.toString();
   document.body.appendChild(iframe);
-  const form = document.createElement('form');
-  form.method = 'POST';
-  form.action = APPS_SCRIPT_URL;
-  form.target = iframe.name;
-  params.forEach((v, k) => {
-    const input = document.createElement('input');
-    input.type = 'hidden'; input.name = k; input.value = v;
-    form.appendChild(input);
-  });
-  document.body.appendChild(form);
-  form.submit();
-  setTimeout(() => { form.remove(); iframe.remove(); }, 3000);
+  setTimeout(() => { iframe.remove(); }, 3000);
 }
 
 // --- Navigation ---
