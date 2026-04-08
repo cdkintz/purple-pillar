@@ -2075,12 +2075,23 @@ function renderDraft() {
   }
   html += '</ul></div>';
 
+  // Preserve search value across re-renders
+  const prevSearch = document.getElementById('draft-pick-search')?.value || '';
+  const hadFocus = document.activeElement?.id === 'draft-pick-search';
+
   el.innerHTML = html;
 
   // Populate pick grid if it's your turn
   if (isMyTurn) {
     window._currentPickIdx = currentPickIdx;
+    const searchEl = document.getElementById('draft-pick-search');
+    if (searchEl && prevSearch) {
+      searchEl.value = prevSearch;
+    }
     filterPickGrid();
+    if (searchEl && hadFocus) {
+      searchEl.focus();
+    }
   }
 }
 
