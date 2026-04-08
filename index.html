@@ -1134,11 +1134,11 @@
       <div class="card">
         <div class="card-title">Leaderboard</div>
         <div class="scoring-legend">
-          <span>Team Win: <strong>+5</strong></span>
-          <span>Solo Win: <strong>+5</strong></span>
+          <span>Win: <strong>+5</strong></span>
+          <span>2nd: <strong>+2</strong></span>
           <span>Groom KO: <strong>+1</strong></span>
           <span>Cory Stock: <strong>+1/+3</strong></span>
-          <span>First Blood: <strong>+2</strong></span>
+          <span>1st Blood: <strong>+2</strong></span>
           <span>Spiked: <strong>-1</strong></span>
         </div>
         <div id="leaderboard-content"></div>
@@ -1219,6 +1219,7 @@
         <ul>
           <li>Team Win (Steven + Wingman each): <strong>+5 pts</strong></li>
           <li>Solo Win (Assassin beats everyone): <strong>+5 pts</strong></li>
+          <li>Runner-Up (2nd place): <strong>+2 pts</strong></li>
           <li>First Blood (first KO of the round): <strong>+2 pts</strong></li>
           <li>Groom-Slayer (take Steven's last stock): <strong>+1 pt</strong></li>
           <li>Cory-Slayer (take any of Cory's stocks): <strong>+1 pt per stock, +3 for final stock</strong></li>
@@ -1542,7 +1543,7 @@ function calculateScores() {
   const breakdown = {};
   PLAYERS.forEach(p => {
     scores[p] = 0;
-    breakdown[p] = { teamWins: 0, soloWins: 0, groomSlayer: 0, ringerSlayer: 0, firstBlood: 0, spiked: 0 };
+    breakdown[p] = { teamWins: 0, soloWins: 0, runnerUp: 0, groomSlayer: 0, ringerSlayer: 0, firstBlood: 0, spiked: 0 };
   });
 
   for (const rd of roundsData) {
@@ -1573,6 +1574,13 @@ function calculateScores() {
         scores[winner] += 5;
         breakdown[winner].soloWins++;
       }
+    }
+
+    // Runner-up: 2nd place gets +2
+    const secondPlace = PLAYERS.find(p => rd.placements[p] === 2);
+    if (secondPlace) {
+      scores[secondPlace] += 2;
+      breakdown[secondPlace].runnerUp = (breakdown[secondPlace].runnerUp || 0) + 1;
     }
 
     // Bonus points
@@ -1645,6 +1653,7 @@ function renderLeaderboard() {
     const parts = [];
     if (bd.teamWins) parts.push(`${bd.teamWins}tw`);
     if (bd.soloWins) parts.push(`${bd.soloWins}sw`);
+    if (bd.runnerUp) parts.push(`${bd.runnerUp}×2nd`);
     if (bd.firstBlood) parts.push(`${bd.firstBlood}fb`);
     if (bd.groomSlayer) parts.push(`${bd.groomSlayer}gs`);
     if (bd.ringerSlayer) parts.push(`${bd.ringerSlayer}cs`);
