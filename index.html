@@ -2143,6 +2143,7 @@ function submitPick(pickData) {
       form.appendChild(input);
     };
 
+    addField('action', 'pick');
     addField('pick', pickData.pick);
     addField('character', pickData.character);
 
@@ -2208,36 +2209,15 @@ async function confirmPick() {
 async function pickTeammate(player) {
   if (!confirm(`Pick ${player} as your Round 1 teammate?`)) return;
 
-  // Write to Rounds sheet: row 2 (round 1), column 2 (Teammate)
-  const params = new URLSearchParams({
-    action: 'teammate',
-    round: 1,
-    teammate: player
-  });
-  const getUrl = APPS_SCRIPT_URL + '?' + params.toString();
+  const params = new URLSearchParams({ action: 'teammate', round: 1, teammate: player });
+  submitViaIframe(params);
 
-  try {
-    const resp = await fetch(getUrl);
-    const result = await resp.json();
-    if (result.success) {
-      // Optimistic update
-      const rd = roundsData.find(d => d.round === 1);
-      if (rd) rd.teammate = player;
-      window._lastRefresh = Date.now() + 8000;
-      renderAll();
-      setTimeout(refreshData, 3000);
-    } else {
-      alert('Failed to save teammate: ' + (result.error || 'unknown error'));
-    }
-  } catch (err) {
-    // Fallback: form POST via iframe
-    await submitPick({ action: 'teammate', round: 1, teammate: player });
-    const rd = roundsData.find(d => d.round === 1);
-    if (rd) rd.teammate = player;
-    window._lastRefresh = Date.now() + 8000;
-    renderAll();
-    setTimeout(refreshData, 5000);
-  }
+  // Optimistic update
+  const rd = roundsData.find(d => d.round === 1);
+  if (rd) rd.teammate = player;
+  window._lastRefresh = Date.now() + 8000;
+  renderAll();
+  setTimeout(refreshData, 5000);
 }
 
 // --- Round Result Wizard ---
