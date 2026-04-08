@@ -2228,7 +2228,8 @@ function openWizard(round) {
     groomSlayer: '',
     coryStocks,
     coryFinalStock: '', // who took the final (3rd) stock
-    spiked: ''
+    spiked: '',
+    finaleWinner: ''
   };
   document.getElementById('wizard-overlay').style.display = '';
   renderWizard();
@@ -2247,17 +2248,129 @@ function renderWizard() {
     <button class="wizard-close" onclick="closeWizard()">Cancel</button>
   </div>`;
 
-  if (s.step === 0) {
-    html += renderTeammateStep();
-  } else if (s.step === 1) {
-    html += renderElimStep();
-  } else if (s.step === 2) {
-    html += renderBonusStep();
-  } else if (s.step === 3) {
-    html += renderReviewStep();
+  if (s.round === 6) {
+    // Finale: just pick the winner between top 2 scorers
+    if (s.step === 0) {
+      html += renderFinaleStep();
+    } else {
+      html += renderFinaleReviewStep();
+    }
+  } else {
+    if (s.step === 0) {
+      html += renderTeammateStep();
+    } else if (s.step === 1) {
+      html += renderElimStep();
+    } else if (s.step === 2) {
+      html += renderBonusStep();
+    } else if (s.step === 3) {
+      html += renderReviewStep();
+    }
   }
 
   el.innerHTML = html;
+}
+
+function renderFinaleStep() {
+  const s = wizardState;
+  const { scores } = calculateScores();
+  const top2 = PLAYERS
+    .map(p => ({ name: p, score: scores[p] }))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 2);
+
+  let html = `<div class="wizard-step-label">Step 1 of 2</div>
+    <div class="wizard-step-title">The Finale</div>
+    <div class="wizard-step-sub">1v1: ${top2[0].name} (${top2[0].score} pts) vs ${top2[1].name} (${top2[1].score} pts)<br>Who won?</div>`;
+
+  html += '<ul class="elim-list">';
+  top2.forEach(p => {
+    const sel = s.finaleWinner === p.name ? 'selected' : '';
+    html += `<li class="elim-item ${sel}" onclick="setFinaleWinner('${p.name}')" style="${s.finaleWinner === p.name ? 'border-color:var(--gold);background:rgba(255,215,0,0.1)' : ''}">
+      <span class="elim-badge" style="${s.finaleWinner === p.name ? 'background:var(--gold);color:#000' : ''}">&#127942;</span>
+      <span>${p.name}</span>
+      <span style="color:var(--muted);font-size:14px;margin-left:auto">${p.score} pts</span>
+    </li>`;
+  });
+  html += '</ul>';
+
+  const canAdvance = !!s.finaleWinner;
+  html += `<div class="wizard-nav">
+    <button class="wizard-btn wizard-btn-back" onclick="closeWizard()">Cancel</button>
+    <button class="wizard-btn wizard-btn-next" ${canAdvance ? '' : 'disabled'} onclick="wizardNext()">Next: Confirm</button>
+  </div>`;
+
+  return html;
+}
+
+function setFinaleWinner(player) {
+  wizardState.finaleWinner = player;
+  renderWizard();
+}
+
+function renderFinaleReviewStep() {
+  const s = wizardState;
+  const { scores } = calculateScores();
+  const top2 = PLAYERS
+    .map(p => ({ name: p, score: scores[p] }))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 2);
+  const loser = top2.find(p => p.name !== s.finaleWinner);
+
+  let html = `<div class="wizard-step-label">Step 2 of 2</div>
+    <div class="wizard-step-title">Confirm Finale</div>
+    <div class="wizard-step-sub">Round 6 — The Championship</div>`;
+
+  html += `<div class="card">
+    <div class="wizard-review-row">
+      <span style="color:var(--gold);font-weight:800;width:40px">1st</span>
+      <span style="font-weight:600">${s.finaleWinner}</span>
+      <span style="color:var(--gold);font-size:14px;margin-left:auto">&#127942; Champion (+5)</span>
+    </div>
+    <div class="wizard-review-row">
+      <span style="color:var(--silver);font-weight:800;width:40px">2nd</span>
+      <span style="font-weight:600">${loser.name}</span>
+      <span style="color:var(--silver);font-size:14px;margin-left:auto">Runner-up (+2)</span>
+    </div>
+  </div>`;
+
+  html += `<div class="wizard-nav">
+    <button class="wizard-btn wizard-btn-back" onclick="wizardBack()">Back</button>
+    <button class="wizard-btn wizard-btn-submit" id="wizard-submit-btn" onclick="submitFinaleResult()">Submit Results</button>
+  </div>`;
+
+  return html;
+}
+
+async function submitFinaleResult() {
+  const s = wizardState;
+  const btn = document.getElementById('wizard-submit-btn');
+  btn.disabled = true;
+  btn.textContent = 'Submitting...';
+
+  const { scores } = calculateScores();
+  const top2 = PLAYERS
+    .map(p => ({ name: p, score: scores[p] }))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 2);
+  const loser = top2.find(p => p.name !== s.finaleWinner);
+
+  const params = new URLSearchParams({ action: 'roundResult', round: 6 });
+  params.set('place_' + s.finaleWinner, 1);
+  params.set('place_' + loser.name, 2);
+
+  submitViaIframe(params);
+
+  // Optimistic update
+  let rd = roundsData.find(d => d.round === 6);
+  if (rd) {
+    PLAYERS.forEach(p => { rd.placements[p] = null; });
+    rd.placements[s.finaleWinner] = 1;
+    rd.placements[loser.name] = 2;
+  }
+  closeWizard();
+  window._lastRefresh = Date.now() + 8000;
+  renderAll();
+  setTimeout(refreshData, 5000);
 }
 
 function renderTeammateStep() {
