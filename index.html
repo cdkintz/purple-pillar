@@ -1806,33 +1806,53 @@ function renderRoundDetail() {
   if (selectedRound >= 1 && selectedRound <= 3) {
     const roundStart = (selectedRound - 1) * 5;
     const roundPicks = draftData.slice(roundStart, roundStart + 5);
+    const revealed = isRoundRevealed(selectedRound);
 
-    const pickNumColors = {
-      '1st': 'var(--green)',
-      '2nd': '#ffd700',
-      '3rd': '#ff9f43',
-      'RANDOM': 'var(--red)'
-    };
+    if (!revealed) {
+      // Not all picks are in — show status only
+      const submitted = roundPicks.filter(d => d.character).length;
+      const charItems = PLAYERS.map(p => {
+        const pick = roundPicks.find(d => d.player === p);
+        const hasChar = pick?.character ? true : false;
+        const tag = p === 'Steven' ? '<span class="lb-tag tag-bachelor" style="font-size:9px;margin-left:4px">Bachelor</span>' : '';
+        return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid rgba(42,42,74,0.2)">
+          <span style="min-width:70px;font-weight:600;font-size:13px">${p}${tag}</span>
+          <span style="color:var(--muted);font-size:13px">${hasChar ? '🔒 Locked in' : 'Awaiting pick...'}</span>
+        </div>`;
+      }).join('');
 
-    const charItems = PLAYERS.map(p => {
-      const pick = roundPicks.find(d => d.player === p);
-      if (!pick) return '';
-      const char = pick.character || 'TBD';
-      const pn = pick.pickNum || '';
-      const isRandom = char === 'RANDOM SELECT';
-      const color = pickNumColors[pn] || 'var(--muted)';
-      const badge = pn ? `<span style="font-size:10px;color:${color};font-weight:600;margin-left:4px">${isRandom ? '' : pn + ' choice'}</span>` : '';
-      const charStyle = isRandom
-        ? 'color:var(--red);font-weight:700'
-        : '';
-      const tag = p === 'Steven' ? '<span class="lb-tag tag-bachelor" style="font-size:9px;margin-left:4px">Bachelor</span>' : '';
-      return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid rgba(42,42,74,0.2)">
-        <span style="min-width:70px;font-weight:600;font-size:13px">${p}${tag}</span>
-        <span class="draft-char" style="${charStyle}">${char}</span>${badge}
+      html += `<div class="card">
+        <div class="card-title">Round ${selectedRound} Character Assignments</div>
+        <p style="color:var(--muted);font-size:12px;margin-bottom:8px">${submitted}/5 picks in — results hidden until all players submit</p>
+        ${charItems}
       </div>`;
-    }).filter(Boolean).join('');
+    } else {
+      // All picks in — reveal everything
+      const pickNumColors = {
+        '1st': 'var(--green)',
+        '2nd': '#ffd700',
+        '3rd': '#ff9f43',
+        'RANDOM': 'var(--red)'
+      };
 
-    if (charItems) {
+      const charItems = PLAYERS.map(p => {
+        const pick = roundPicks.find(d => d.player === p);
+        if (!pick) return '';
+        const char = pick.character || 'TBD';
+        const pn = pick.pickNum || '';
+        const isRandom = char === 'RANDOM SELECT';
+        const color = pickNumColors[pn] || 'var(--muted)';
+        const badge = pn ? `<span style="font-size:10px;color:${color};font-weight:600;margin-left:4px">${isRandom ? '' : pn + ' choice'}</span>` : '';
+        const charStyle = isRandom
+          ? 'color:var(--red);font-weight:700'
+          : '';
+        const tag = p === 'Steven' ? '<span class="lb-tag tag-bachelor" style="font-size:9px;margin-left:4px">Bachelor</span>' : '';
+        return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid rgba(42,42,74,0.2)">
+          <span style="min-width:70px;font-weight:600;font-size:13px">${p}${tag}</span>
+          <span class="draft-char" style="${charStyle}">${char}</span>${badge}
+        </div>`;
+      }).filter(Boolean).join('');
+
       html += `<div class="card">
         <div class="card-title">Round ${selectedRound} Character Assignments</div>
         ${charItems}
@@ -1948,6 +1968,13 @@ function renderRoundHistory() {
   el.innerHTML = html;
 }
 
+// A round's picks are only revealed once ALL 5 players have resolved characters
+function isRoundRevealed(round) {
+  const start = (round - 1) * 5;
+  const roundPicks = draftData.slice(start, start + 5);
+  return roundPicks.every(d => d.character);
+}
+
 function renderDraft() {
   const el = document.getElementById('draft-live');
   const draftNotStarted = draftData.length === 0;
@@ -1993,11 +2020,12 @@ function renderDraft() {
     </div>`;
   }
 
-  // Character pools summary
+  // Character pools summary — only show characters from revealed rounds
   const pools = {};
   PLAYERS.forEach(p => { pools[p] = []; });
-  draftData.forEach(d => {
-    if (pools[d.player] !== undefined && d.character && d.character !== 'RANDOM SELECT') {
+  draftData.forEach((d, idx) => {
+    const round = Math.floor(idx / 5) + 1;
+    if (pools[d.player] !== undefined && d.character && d.character !== 'RANDOM SELECT' && isRoundRevealed(round)) {
       pools[d.player].push(d.character);
     }
   });
@@ -2036,38 +2064,51 @@ function renderDraft() {
   };
 
   for (let round = 0; round < 3; round++) {
+    const revealed = isRoundRevealed(round + 1);
     html += `<li style="padding:6px 0;border-bottom:1px solid var(--card-border)">
       <span style="font-size:11px;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:1px">
         Round ${round + 1}</span>
+      ${!revealed && draftData.length > 0 ? '<span style="font-size:10px;color:var(--muted);margin-left:8px">Waiting for all picks...</span>' : ''}
     </li>`;
     for (let i = 0; i < 5; i++) {
       const pickIdx = round * 5 + i;
       const d = draftData[pickIdx];
       const player = d?.player || DRAFT_ORDER[pickIdx];
-      const char = d?.character || '';
-      const pickNum = d?.pickNum || '';
-      const isDone = char !== '';
-      const isRandom = char === 'RANDOM SELECT';
-      const numClass = isDone ? 'done' : '';
       const youTag = player === currentPlayer ? '<span class="pick-you">YOU</span>' : '';
 
-      // Pick priority badge
-      let badge = '';
-      if (pickNum && isDone) {
-        const color = pickNumColors[pickNum] || 'var(--muted)';
-        const label = isRandom ? 'RANDOM' : pickNum + ' choice';
-        badge = `<span style="font-size:10px;color:${color};font-weight:600;margin-left:6px">${label}</span>`;
+      if (!revealed) {
+        // Round not fully resolved — hide all characters
+        const hasSubmitted = d?.character ? true : false;
+        html += `<li class="pick-history-item">
+          <span class="pick-num">${pickIdx + 1}</span>
+          <span class="pick-player">${player} ${youTag}</span>
+          <span class="pick-char empty">${hasSubmitted ? '🔒 Locked in' : 'Awaiting pick...'}</span>
+        </li>`;
+      } else {
+        // Round revealed — show everything
+        const char = d?.character || '';
+        const pickNum = d?.pickNum || '';
+        const isDone = char !== '';
+        const isRandom = char === 'RANDOM SELECT';
+        const numClass = isDone ? 'done' : '';
+
+        let badge = '';
+        if (pickNum && isDone) {
+          const color = pickNumColors[pickNum] || 'var(--muted)';
+          const label = isRandom ? 'RANDOM' : pickNum + ' choice';
+          badge = `<span style="font-size:10px;color:${color};font-weight:600;margin-left:6px">${label}</span>`;
+        }
+
+        const charDisplay = isRandom
+          ? `<span style="color:var(--red);font-weight:700">RANDOM SELECT</span>`
+          : char;
+
+        html += `<li class="pick-history-item">
+          <span class="pick-num ${numClass}">${pickIdx + 1}</span>
+          <span class="pick-player">${player} ${youTag}</span>
+          <span class="pick-char ${char ? '' : 'empty'}">${charDisplay || 'TBD'}${badge}</span>
+        </li>`;
       }
-
-      const charDisplay = isRandom
-        ? `<span style="color:var(--red);font-weight:700">RANDOM SELECT</span>`
-        : char;
-
-      html += `<li class="pick-history-item">
-        <span class="pick-num ${numClass}">${pickIdx + 1}</span>
-        <span class="pick-player">${player} ${youTag}</span>
-        <span class="pick-char ${char ? '' : 'empty'}">${charDisplay || 'TBD'}${badge}</span>
-      </li>`;
     }
   }
   html += '</ul></div>';
