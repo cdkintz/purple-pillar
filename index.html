@@ -1109,18 +1109,7 @@
   </div>
 </div>
 
-<!-- CONFIRM PICK MODAL -->
-<div class="confirm-overlay" id="confirm-overlay" style="display:none">
-  <div class="confirm-modal">
-    <h3>Confirm Pick</h3>
-    <div class="char-name" id="confirm-char-name"></div>
-    <div class="pick-info" id="confirm-pick-info"></div>
-    <div class="confirm-btns">
-      <button class="btn-cancel" onclick="cancelPick()">Cancel</button>
-      <button class="btn-confirm" id="btn-confirm" onclick="confirmPick()">Lock In</button>
-    </div>
-  </div>
-</div>
+<!-- Confirm pick modal removed — draft uses Google Form -->
 
 <!-- MAIN APP -->
 <div id="app">
@@ -1183,10 +1172,13 @@
       </div>
 
       <div class="card rule-section">
-        <h3>Phase 1: The Draft (Rounds 1-3)</h3>
+        <h3>Phase 1: Ranked Choice Draft (Rounds 1-3)</h3>
         <ul>
-          <li>3 rounds: each player picks a pool of 3 characters</li>
-          <li>Same order every round: Steven &rarr; Rodney &rarr; Franco &rarr; Ben &rarr; Cory</li>
+          <li>Each player privately submits their top 3 character choices per round via the form</li>
+          <li>Steven (Bachelor) picks one character &mdash; he always gets his pick</li>
+          <li>Others are resolved in priority order: Rodney &rarr; Franco &rarr; Ben &rarr; Cory</li>
+          <li>Your 1st choice is assigned if not already taken; otherwise 2nd, then 3rd</li>
+          <li>If all 3 choices are taken: <strong style="color:var(--red)">RANDOM SELECT</strong> (punishment)</li>
           <li>Round 1: Steven picks his first teammate (not Cory)</li>
           <li>Rounds 2-3: Steven pairs with whoever placed 5th last round</li>
           <li>Must use drafted characters only</li>
@@ -1351,15 +1343,18 @@ const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzsg6_XAaV8Xv9B
 const PLAYERS = ['Steven', 'Cory', 'Ben', 'Franco', 'Rodney'];
 const PLAYER_TAGS = { Steven: 'bachelor' };
 
-const SNAKE_DRAFT_ORDER = [
+const DRAFT_ORDER = [
   'Steven', 'Rodney', 'Franco', 'Ben', 'Cory',
   'Steven', 'Rodney', 'Franco', 'Ben', 'Cory',
   'Steven', 'Rodney', 'Franco', 'Ben', 'Cory'
 ];
 
+// Google Form URL — paste your form link here:
+const DRAFT_FORM_URL = '';
+
 // Identity management
 let currentPlayer = localStorage.getItem('purplepillar_player') || null;
-let pendingPick = null; // {pick, character} awaiting confirmation
+// pendingPick removed — draft uses Google Form now
 
 // Full SSBU base roster (non-DLC)
 const ROSTER = [
@@ -1467,7 +1462,8 @@ function parseDraft(rows) {
     data.push({
       pick: parseInt(r[0]) || i,
       player: r[1] || '',
-      character: r[2] || ''
+      character: r[2] || '',
+      pickNum: r[3] || ''
     });
   }
   return data;
@@ -1806,43 +1802,39 @@ function renderRoundDetail() {
     </div>`;
   }
 
-  // Draft character restrictions for Phase 1
+  // Character assignments for Phase 1 (ranked choice draft)
   if (selectedRound >= 1 && selectedRound <= 3) {
-    const playerChars = {};
-    PLAYERS.forEach(p => { playerChars[p] = []; });
-    draftData.forEach(d => {
-      if (d.character && playerChars[d.player] !== undefined) {
-        playerChars[d.player].push(d.character);
-      }
-    });
+    const roundStart = (selectedRound - 1) * 5;
+    const roundPicks = draftData.slice(roundStart, roundStart + 5);
 
-    // Show which drafted characters each player has used in prior rounds
-    const usedChars = {};
-    PLAYERS.forEach(p => { usedChars[p] = []; });
-    roundsData.forEach(r => {
-      if (r.round < selectedRound && r.chars) {
-        PLAYERS.forEach(p => {
-          if (r.chars[p]) usedChars[p].push(r.chars[p]);
-        });
-      }
-    });
+    const pickNumColors = {
+      '1st': 'var(--green)',
+      '2nd': '#ffd700',
+      '3rd': '#ff9f43',
+      'RANDOM': 'var(--red)'
+    };
 
     const charItems = PLAYERS.map(p => {
-      const pool = playerChars[p];
-      if (pool.length === 0) return '';
-      const charTags = pool.map(c => {
-        const used = usedChars[p].includes(c);
-        return `<span class="draft-char" style="${used ? 'opacity:0.4;text-decoration:line-through' : ''}">${c}</span>`;
-      }).join('');
-      return `<div style="display:flex;align-items:center;gap:8px;padding:4px 0">
-        <span style="min-width:60px;font-weight:600;font-size:13px">${p}</span>
-        <div style="display:flex;gap:4px;flex-wrap:wrap">${charTags}</div>
+      const pick = roundPicks.find(d => d.player === p);
+      if (!pick) return '';
+      const char = pick.character || 'TBD';
+      const pn = pick.pickNum || '';
+      const isRandom = char === 'RANDOM SELECT';
+      const color = pickNumColors[pn] || 'var(--muted)';
+      const badge = pn ? `<span style="font-size:10px;color:${color};font-weight:600;margin-left:4px">${isRandom ? '' : pn + ' choice'}</span>` : '';
+      const charStyle = isRandom
+        ? 'color:var(--red);font-weight:700'
+        : '';
+      const tag = p === 'Steven' ? '<span class="lb-tag tag-bachelor" style="font-size:9px;margin-left:4px">Bachelor</span>' : '';
+      return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid rgba(42,42,74,0.2)">
+        <span style="min-width:70px;font-weight:600;font-size:13px">${p}${tag}</span>
+        <span class="draft-char" style="${charStyle}">${char}</span>${badge}
       </div>`;
     }).filter(Boolean).join('');
 
     if (charItems) {
       html += `<div class="card">
-        <div class="card-title">Available Draft Characters</div>
+        <div class="card-title">Round ${selectedRound} Character Assignments</div>
         ${charItems}
       </div>`;
     }
@@ -1958,60 +1950,54 @@ function renderRoundHistory() {
 
 function renderDraft() {
   const el = document.getElementById('draft-live');
-
-  // Find current pick (first pick without a character)
-  const currentPickIdx = draftData.findIndex(d => !d.character);
-  const draftComplete = currentPickIdx === -1 || draftData.length === 0;
-  const currentPickPlayer = draftComplete ? null : draftData[currentPickIdx]?.player;
-  const isMyTurn = !draftComplete && currentPlayer && currentPickPlayer === currentPlayer;
   const draftNotStarted = draftData.length === 0;
+  const totalResolved = draftData.filter(d => d.character).length;
+  const draftComplete = totalResolved === 15;
 
-  // Which snake round? 0-4 = Round 1, 5-9 = Round 2, 10-14 = Round 3
-  const snakeRound = draftComplete ? 3 : Math.floor(currentPickIdx / 5) + 1;
-  const pickInRound = draftComplete ? 5 : (currentPickIdx % 5) + 1;
-
-  // Build progress pips (15 total)
-  const pips = Array.from({ length: 15 }, (_, i) => {
-    if (draftComplete || i < currentPickIdx) return '<div class="draft-pip done"></div>';
-    if (i === currentPickIdx) return '<div class="draft-pip current"></div>';
-    return '<div class="draft-pip"></div>';
-  }).join('');
+  // Count resolved rounds
+  const resolvedRounds = [1, 2, 3].filter(r => {
+    const start = (r - 1) * 5;
+    return draftData.slice(start, start + 5).every(d => d.character);
+  }).length;
 
   // Hero section
-  let heroTitle = '';
-  let heroClass = '';
-  let heroSub = '';
+  let heroTitle, heroClass, heroSub;
   if (draftNotStarted) {
-    heroTitle = 'Draft Not Started';
+    heroTitle = 'Awaiting Picks';
     heroClass = 'waiting';
-    heroSub = 'Waiting for data...';
+    heroSub = 'Submit your ranked choices via the form below';
   } else if (draftComplete) {
     heroTitle = 'Draft Complete!';
     heroClass = 'complete';
     heroSub = 'All 15 picks are locked in';
-  } else if (isMyTurn) {
-    heroTitle = `Your Pick, ${currentPlayer}!`;
-    heroClass = 'your-turn';
-    heroSub = `Pick ${currentPickIdx + 1} of 15`;
   } else {
-    heroTitle = `${currentPickPlayer}'s Turn`;
+    heroTitle = `${resolvedRounds}/3 Rounds Resolved`;
     heroClass = 'waiting';
-    heroSub = `Pick ${currentPickIdx + 1} of 15 &middot; refreshing automatically`;
+    heroSub = `${totalResolved} of 15 picks assigned`;
   }
 
   let html = `
     <div class="draft-hero">
-      <div class="draft-round-badge">Snake Draft &middot; Round ${snakeRound} of 3</div>
+      <div class="draft-round-badge">Ranked Choice Draft</div>
       <div class="draft-hero-title ${heroClass}">${heroTitle}</div>
       <div class="draft-hero-sub">${heroSub}</div>
-      <div class="draft-progress">${pips}</div>
     </div>`;
 
-  // Character pools summary (at the top for easy reference)
+  // Submit picks button
+  if (DRAFT_FORM_URL) {
+    html += `<div class="card" style="text-align:center">
+      <a href="${DRAFT_FORM_URL}" target="_blank" style="display:inline-block;padding:14px 28px;border-radius:10px;background:linear-gradient(135deg, var(--primary), var(--primary-dim));color:white;text-decoration:none;font-size:16px;font-weight:700;letter-spacing:0.5px">
+        Submit Your Picks
+      </a>
+      <p style="color:var(--muted);font-size:12px;margin-top:8px">Pick your top 3 characters for each round privately</p>
+    </div>`;
+  }
+
+  // Character pools summary
   const pools = {};
   PLAYERS.forEach(p => { pools[p] = []; });
   draftData.forEach(d => {
-    if (pools[d.player] !== undefined && d.character) {
+    if (pools[d.player] !== undefined && d.character && d.character !== 'RANDOM SELECT') {
       pools[d.player].push(d.character);
     }
   });
@@ -2021,7 +2007,6 @@ function renderDraft() {
     <div class="draft-grid">`;
   html += PLAYERS.map(p => {
     const chars = pools[p];
-    const isOnClock = p === currentPickPlayer && !draftComplete;
     const charHtml = [0, 1, 2].map(i => {
       const c = chars[i];
       return c
@@ -2031,161 +2016,68 @@ function renderDraft() {
     const tag = PLAYER_TAGS[p]
       ? `<span class="lb-tag tag-${PLAYER_TAGS[p]}" style="font-size:9px">Bachelor</span>`
       : '';
-    const clockStyle = isOnClock ? 'border-color: var(--green); box-shadow: 0 0 12px rgba(46,213,115,0.2)' : '';
-    return `<div class="draft-player-card" style="${clockStyle}">
+    return `<div class="draft-player-card">
       <div class="draft-player-name">${p} ${tag}</div>
       <div class="draft-chars">${charHtml}</div>
     </div>`;
   }).join('');
   html += '</div></div>';
 
-  // If it's your turn, show the character picker
-  if (isMyTurn) {
-    const drafted = new Set(draftData.map(d => d.character).filter(Boolean));
-    const searchId = 'draft-pick-search';
-    html += `
-      <div class="card">
-        <div class="card-title">Choose Your Character</div>
-        <input type="text" class="pick-search" id="${searchId}" placeholder="Search characters..." oninput="filterPickGrid()">
-        <div class="pick-grid" id="pick-grid"></div>
-      </div>`;
-  }
-
-  // Pick history - show all 15 picks with status
+  // Draft board — show all 15 picks with pick priority
   html += `<div class="card">
     <div class="card-title">Draft Board</div>
     <ul class="pick-history">`;
 
+  const pickNumColors = {
+    '1st': 'var(--green)',
+    '2nd': '#ffd700',
+    '3rd': '#ff9f43',
+    'RANDOM': 'var(--red)'
+  };
+
   for (let round = 0; round < 3; round++) {
     html += `<li style="padding:6px 0;border-bottom:1px solid var(--card-border)">
       <span style="font-size:11px;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:1px">
-        Round ${round + 1}      </span>
+        Round ${round + 1}</span>
     </li>`;
     for (let i = 0; i < 5; i++) {
       const pickIdx = round * 5 + i;
       const d = draftData[pickIdx];
-      const player = d?.player || SNAKE_DRAFT_ORDER[pickIdx];
+      const player = d?.player || DRAFT_ORDER[pickIdx];
       const char = d?.character || '';
-      const isCurrent = pickIdx === currentPickIdx && !draftComplete;
+      const pickNum = d?.pickNum || '';
       const isDone = char !== '';
-      const numClass = isDone ? 'done' : (isCurrent ? 'current' : '');
+      const isRandom = char === 'RANDOM SELECT';
+      const numClass = isDone ? 'done' : '';
       const youTag = player === currentPlayer ? '<span class="pick-you">YOU</span>' : '';
+
+      // Pick priority badge
+      let badge = '';
+      if (pickNum && isDone) {
+        const color = pickNumColors[pickNum] || 'var(--muted)';
+        const label = isRandom ? 'RANDOM' : pickNum + ' choice';
+        badge = `<span style="font-size:10px;color:${color};font-weight:600;margin-left:6px">${label}</span>`;
+      }
+
+      const charDisplay = isRandom
+        ? `<span style="color:var(--red);font-weight:700">RANDOM SELECT</span>`
+        : char;
+
       html += `<li class="pick-history-item">
         <span class="pick-num ${numClass}">${pickIdx + 1}</span>
         <span class="pick-player">${player} ${youTag}</span>
-        <span class="pick-char ${char ? '' : 'empty'}">${char || (isCurrent ? 'On the clock...' : 'TBD')}</span>
+        <span class="pick-char ${char ? '' : 'empty'}">${charDisplay || 'TBD'}${badge}</span>
       </li>`;
     }
   }
   html += '</ul></div>';
 
   el.innerHTML = html;
-
-  // Populate pick grid if it's your turn
-  if (isMyTurn) {
-    window._currentPickIdx = currentPickIdx;
-    filterPickGrid();
-  }
-}
-
-function filterPickGrid() {
-  const searchEl = document.getElementById('draft-pick-search');
-  const search = (searchEl?.value || '').toLowerCase();
-  const drafted = new Set(draftData.map(d => d.character).filter(Boolean));
-  const pickIdx = window._currentPickIdx;
-
-  const filtered = search
-    ? ROSTER.filter(c => c.toLowerCase().includes(search))
-    : ROSTER;
-
-  document.getElementById('pick-grid').innerHTML = filtered.map(c => {
-    const isDrafted = drafted.has(c);
-    if (isDrafted) {
-      return `<span class="pick-chip unavailable">${c}</span>`;
-    }
-    return `<span class="pick-chip" onclick="selectCharacter('${c.replace(/'/g, "\\'")}', ${pickIdx + 1})">${c}</span>`;
-  }).join('');
 }
 
 // --- Character Pick Flow ---
 
-function selectCharacter(character, pickNum) {
-  pendingPick = { pick: pickNum, character };
-  document.getElementById('confirm-char-name').textContent = character;
-  document.getElementById('confirm-pick-info').textContent = `Pick #${pickNum} for ${currentPlayer}`;
-  document.getElementById('btn-confirm').disabled = false;
-  document.getElementById('btn-confirm').textContent = 'Lock In';
-  document.getElementById('confirm-overlay').style.display = 'flex';
-}
-
-function cancelPick() {
-  pendingPick = null;
-  document.getElementById('confirm-overlay').style.display = 'none';
-}
-
-function submitPick(pickData) {
-  // Use GET via hidden iframe src — avoids CORS and confirmed working
-  return new Promise((resolve) => {
-    const params = new URLSearchParams({
-      action: 'pick',
-      pick: pickData.pick,
-      character: pickData.character
-    });
-    const iframe = document.createElement('iframe');
-    iframe.style.display = 'none';
-    iframe.src = APPS_SCRIPT_URL + '?' + params.toString();
-    document.body.appendChild(iframe);
-    setTimeout(() => {
-      iframe.remove();
-      resolve();
-    }, 3000);
-  });
-}
-
-async function confirmPick() {
-  if (!pendingPick || !APPS_SCRIPT_URL) {
-    if (!APPS_SCRIPT_URL) {
-      alert('Apps Script URL not configured.');
-    }
-    return;
-  }
-
-  const btn = document.getElementById('btn-confirm');
-  btn.disabled = true;
-  btn.textContent = 'Submitting...';
-
-  const pickData = { pick: pendingPick.pick, character: pendingPick.character };
-
-  try {
-    // Optimistically update local state immediately
-    const idx = draftData.findIndex(d => d.pick === pickData.pick);
-    if (idx !== -1) {
-      draftData[idx].character = pickData.character;
-    }
-
-    pendingPick = null;
-    document.getElementById('confirm-overlay').style.display = 'none';
-
-    // Pause auto-refresh so it doesn't overwrite optimistic update
-    window._lastRefresh = Date.now() + 8000;
-    renderDraft();
-
-    // Fire the form POST (no CORS issues)
-    await submitPick(pickData);
-
-    // Verify from sheet after write propagates
-    setTimeout(refreshData, 5000);
-  } catch (err) {
-    console.error('Pick submission failed:', err);
-    // Revert optimistic update
-    const idx = draftData.findIndex(d => d.pick === pickData.pick);
-    if (idx !== -1) {
-      draftData[idx].character = '';
-    }
-    renderDraft();
-    alert('Pick failed to submit. Please try again.');
-  }
-}
+// Old interactive pick functions removed — draft now uses Google Form + sheet formulas
 
 // --- Teammate Pick (Round 1, Steven only) ---
 
