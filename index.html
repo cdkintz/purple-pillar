@@ -1802,74 +1802,18 @@ function renderRoundDetail() {
     </div>`;
   }
 
-  // Character assignments for Phase 1 (ranked choice draft)
-  if (selectedRound >= 1 && selectedRound <= 3) {
-    const roundStart = (selectedRound - 1) * 5;
-    const roundPicks = draftData.slice(roundStart, roundStart + 5);
-    const revealed = isRoundRevealed(selectedRound);
-
-    if (!revealed) {
-      // Not all picks are in — show status only
-      const submitted = roundPicks.filter(d => d.character).length;
-      const charItems = PLAYERS.map(p => {
-        const pick = roundPicks.find(d => d.player === p);
-        const hasChar = pick?.character ? true : false;
-        const tag = p === 'Steven' ? '<span class="lb-tag tag-bachelor" style="font-size:9px;margin-left:4px">Bachelor</span>' : '';
-        return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid rgba(42,42,74,0.2)">
-          <span style="min-width:70px;font-weight:600;font-size:13px">${p}${tag}</span>
-          <span style="color:var(--muted);font-size:13px">${hasChar ? '🔒 Locked in' : 'Awaiting pick...'}</span>
-        </div>`;
-      }).join('');
-
-      html += `<div class="card">
-        <div class="card-title">Round ${selectedRound} Character Assignments</div>
-        <p style="color:var(--muted);font-size:12px;margin-bottom:8px">${submitted}/5 picks in — results hidden until all players submit</p>
-        ${charItems}
-      </div>`;
-    } else {
-      // All picks in — reveal everything
-      const pickNumColors = {
-        '1st': 'var(--green)',
-        '2nd': '#ffd700',
-        '3rd': '#ff9f43',
-        'RANDOM': 'var(--red)'
-      };
-
-      const charItems = PLAYERS.map(p => {
-        const pick = roundPicks.find(d => d.player === p);
-        if (!pick) return '';
-        const char = pick.character || 'TBD';
-        const pn = pick.pickNum || '';
-        const isRandom = char === 'RANDOM SELECT';
-        const color = pickNumColors[pn] || 'var(--muted)';
-        const badge = pn ? `<span style="font-size:10px;color:${color};font-weight:600;margin-left:4px">${isRandom ? '' : pn + ' choice'}</span>` : '';
-        const charStyle = isRandom
-          ? 'color:var(--red);font-weight:700'
-          : '';
-        const tag = p === 'Steven' ? '<span class="lb-tag tag-bachelor" style="font-size:9px;margin-left:4px">Bachelor</span>' : '';
-        return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid rgba(42,42,74,0.2)">
-          <span style="min-width:70px;font-weight:600;font-size:13px">${p}${tag}</span>
-          <span class="draft-char" style="${charStyle}">${char}</span>${badge}
-        </div>`;
-      }).filter(Boolean).join('');
-
-      html += `<div class="card">
-        <div class="card-title">Round ${selectedRound} Character Assignments</div>
-        ${charItems}
-      </div>`;
-    }
-  }
-
-  // Results table
+  // Results table — includes character assignments for rounds 1-3
   if (hasResults) {
     const sorted = PLAYERS
       .filter(p => rd.placements[p] !== null)
       .sort((a, b) => (rd.placements[a] || 99) - (rd.placements[b] || 99));
 
+    const showChars = selectedRound >= 1 && selectedRound <= 3 && isRoundRevealed(selectedRound);
+
     html += `<div class="card">
       <div class="card-title">Results</div>
       <table class="results-table">
-        <thead><tr><th>Place</th><th>Player</th><th>Bonus</th></tr></thead>
+        <thead><tr><th>Place</th><th>Player</th>${showChars ? '<th>Character</th>' : ''}<th>Bonus</th></tr></thead>
         <tbody>
           ${sorted.map(p => {
             const place = rd.placements[p];
@@ -1886,9 +1830,15 @@ function renderRoundDetail() {
             }
             if (rd.spiked === p) bonuses.push('<span class="bonus-tag" style="background:#666;color:#fff">Spiked -1</span>');
             const isTeam = p === 'Steven' || p === rd.teammate;
+            const char = showChars ? getDraftChar(p, selectedRound) : '';
+            const isRandom = char === 'RANDOM SELECT';
+            const charCell = showChars
+              ? `<td style="${isRandom ? 'color:var(--red);font-weight:700' : 'color:var(--teal)'}">${char || '--'}</td>`
+              : '';
             return `<tr>
               <td class="place-${place}">${place}${place === 1 ? 'st' : place === 2 ? 'nd' : place === 3 ? 'rd' : 'th'}</td>
               <td class="place-${place}">${p} ${isTeam && selectedRound !== 6 ? '<span style="color:var(--teal);font-size:10px">TEAM</span>' : ''}</td>
+              ${charCell}
               <td>${bonuses.join(' ') || '-'}</td>
             </tr>`;
           }).join('')}
@@ -1935,8 +1885,10 @@ function renderRoundHistory() {
       html += `<div style="font-size:13px;color:var(--muted);margin-bottom:8px">Team: ${teamLabel}</div>`;
     }
 
+    const showChars = rd.round >= 1 && rd.round <= 3 && isRoundRevealed(rd.round);
+
     html += `<table class="results-table">
-      <thead><tr><th>Place</th><th>Player</th><th>Bonus</th></tr></thead>
+      <thead><tr><th>Place</th><th>Player</th>${showChars ? '<th>Character</th>' : ''}<th>Bonus</th></tr></thead>
       <tbody>
         ${sorted.map(p => {
           const place = rd.placements[p];
@@ -1953,9 +1905,15 @@ function renderRoundHistory() {
           }
           if (rd.spiked === p) bonuses.push('<span class="bonus-tag" style="background:#666;color:#fff">Spiked -1</span>');
           const isTeam = p === 'Steven' || p === rd.teammate;
+          const char = showChars ? getDraftChar(p, rd.round) : '';
+          const isRandom = char === 'RANDOM SELECT';
+          const charCell = showChars
+            ? `<td style="${isRandom ? 'color:var(--red);font-weight:700' : 'color:var(--teal)'}">${char || '--'}</td>`
+            : '';
           return `<tr>
             <td class="place-${place}">${place}${place === 1 ? 'st' : place === 2 ? 'nd' : place === 3 ? 'rd' : 'th'}</td>
             <td class="place-${place}">${p} ${isTeam && rd.round !== 6 ? '<span style="color:var(--teal);font-size:10px">TEAM</span>' : ''}</td>
+            ${charCell}
             <td>${bonuses.join(' ') || '-'}</td>
           </tr>`;
         }).join('')}
@@ -1975,40 +1933,18 @@ function isRoundRevealed(round) {
   return roundPicks.every(d => d.character);
 }
 
+// Get a player's assigned character for a specific round (1-indexed)
+function getDraftChar(player, round) {
+  const start = (round - 1) * 5;
+  const pick = draftData.slice(start, start + 5).find(d => d.player === player);
+  return pick?.character || '';
+}
+
 function renderDraft() {
   const el = document.getElementById('draft-live');
   const draftNotStarted = draftData.length === 0;
-  const totalResolved = draftData.filter(d => d.character).length;
-  const draftComplete = totalResolved === 15;
 
-  // Count resolved rounds
-  const resolvedRounds = [1, 2, 3].filter(r => {
-    const start = (r - 1) * 5;
-    return draftData.slice(start, start + 5).every(d => d.character);
-  }).length;
-
-  // Hero section
-  let heroTitle, heroClass, heroSub;
-  if (draftNotStarted) {
-    heroTitle = 'Awaiting Picks';
-    heroClass = 'waiting';
-    heroSub = 'Submit your ranked choices via the form below';
-  } else if (draftComplete) {
-    heroTitle = 'Draft Complete!';
-    heroClass = 'complete';
-    heroSub = 'All 15 picks are locked in';
-  } else {
-    heroTitle = `${resolvedRounds}/3 Rounds Resolved`;
-    heroClass = 'waiting';
-    heroSub = `${totalResolved} of 15 picks assigned`;
-  }
-
-  let html = `
-    <div class="draft-hero">
-      <div class="draft-round-badge">Ranked Choice Draft</div>
-      <div class="draft-hero-title ${heroClass}">${heroTitle}</div>
-      <div class="draft-hero-sub">${heroSub}</div>
-    </div>`;
+  let html = '';
 
   // Submit picks button
   if (DRAFT_FORM_URL) {
@@ -2016,102 +1952,49 @@ function renderDraft() {
       <a href="${DRAFT_FORM_URL}" target="_blank" style="display:inline-block;padding:14px 28px;border-radius:10px;background:linear-gradient(135deg, var(--primary), var(--primary-dim));color:white;text-decoration:none;font-size:16px;font-weight:700;letter-spacing:0.5px">
         Submit Your Picks
       </a>
-      <p style="color:var(--muted);font-size:12px;margin-top:8px">Pick your top 3 characters for each round privately</p>
+      <p style="color:var(--muted);font-size:12px;margin-top:8px">Pick your characters for each round privately</p>
     </div>`;
   }
 
-  // Character pools summary — only show characters from revealed rounds
-  const pools = {};
-  PLAYERS.forEach(p => { pools[p] = []; });
-  draftData.forEach((d, idx) => {
-    const round = Math.floor(idx / 5) + 1;
-    if (pools[d.player] !== undefined && d.character && d.character !== 'RANDOM SELECT' && isRoundRevealed(round)) {
-      pools[d.player].push(d.character);
-    }
-  });
+  // Simple round-by-round table
+  for (let round = 1; round <= 3; round++) {
+    const revealed = isRoundRevealed(round);
+    const start = (round - 1) * 5;
+    const roundPicks = draftData.slice(start, start + 5);
 
-  html += `<div class="card">
-    <div class="card-title">Character Pools</div>
-    <div class="draft-grid">`;
-  html += PLAYERS.map(p => {
-    const chars = pools[p];
-    const charHtml = [0, 1, 2].map(i => {
-      const c = chars[i];
-      return c
-        ? `<span class="draft-char">${c}</span>`
-        : `<span class="draft-char empty">--</span>`;
-    }).join('');
-    const tag = PLAYER_TAGS[p]
-      ? `<span class="lb-tag tag-${PLAYER_TAGS[p]}" style="font-size:9px">Bachelor</span>`
-      : '';
-    return `<div class="draft-player-card">
-      <div class="draft-player-name">${p} ${tag}</div>
-      <div class="draft-chars">${charHtml}</div>
-    </div>`;
-  }).join('');
-  html += '</div></div>';
+    html += `<div class="card">
+      <div class="card-title">Round ${round}</div>`;
 
-  // Draft board — show all 15 picks with pick priority
-  html += `<div class="card">
-    <div class="card-title">Draft Board</div>
-    <ul class="pick-history">`;
-
-  const pickNumColors = {
-    '1st': 'var(--green)',
-    '2nd': '#ffd700',
-    '3rd': '#ff9f43',
-    'RANDOM': 'var(--red)'
-  };
-
-  for (let round = 0; round < 3; round++) {
-    const revealed = isRoundRevealed(round + 1);
-    html += `<li style="padding:6px 0;border-bottom:1px solid var(--card-border)">
-      <span style="font-size:11px;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:1px">
-        Round ${round + 1}</span>
-      ${!revealed && draftData.length > 0 ? '<span style="font-size:10px;color:var(--muted);margin-left:8px">Waiting for all picks...</span>' : ''}
-    </li>`;
-    for (let i = 0; i < 5; i++) {
-      const pickIdx = round * 5 + i;
-      const d = draftData[pickIdx];
-      const player = d?.player || DRAFT_ORDER[pickIdx];
-      const youTag = player === currentPlayer ? '<span class="pick-you">YOU</span>' : '';
-
-      if (!revealed) {
-        // Round not fully resolved — hide all characters
-        const hasSubmitted = d?.character ? true : false;
-        html += `<li class="pick-history-item">
-          <span class="pick-num">${pickIdx + 1}</span>
-          <span class="pick-player">${player} ${youTag}</span>
-          <span class="pick-char empty">${hasSubmitted ? '🔒 Locked in' : 'Awaiting pick...'}</span>
-        </li>`;
-      } else {
-        // Round revealed — show everything
-        const char = d?.character || '';
-        const pickNum = d?.pickNum || '';
-        const isDone = char !== '';
+    if (!revealed && !draftNotStarted) {
+      const submitted = roundPicks.filter(d => d.character).length;
+      html += `<p style="color:var(--muted);font-size:12px;margin-bottom:8px">${submitted}/5 picks in — hidden until everyone submits</p>`;
+      html += PLAYERS.map(p => {
+        const pick = roundPicks.find(d => d.player === p);
+        const hasChar = pick?.character ? true : false;
+        return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(42,42,74,0.15)">
+          <span style="min-width:70px;font-weight:600">${p}</span>
+          <span style="color:var(--muted);font-size:13px">${hasChar ? '🔒 Locked in' : 'Awaiting pick...'}</span>
+        </div>`;
+      }).join('');
+    } else if (revealed) {
+      html += PLAYERS.map(p => {
+        const pick = roundPicks.find(d => d.player === p);
+        const char = pick?.character || '';
         const isRandom = char === 'RANDOM SELECT';
-        const numClass = isDone ? 'done' : '';
-
-        let badge = '';
-        if (pickNum && isDone) {
-          const color = pickNumColors[pickNum] || 'var(--muted)';
-          const label = isRandom ? 'RANDOM' : pickNum + ' choice';
-          badge = `<span style="font-size:10px;color:${color};font-weight:600;margin-left:6px">${label}</span>`;
-        }
-
         const charDisplay = isRandom
-          ? `<span style="color:var(--red);font-weight:700">RANDOM SELECT</span>`
-          : char;
-
-        html += `<li class="pick-history-item">
-          <span class="pick-num ${numClass}">${pickIdx + 1}</span>
-          <span class="pick-player">${player} ${youTag}</span>
-          <span class="pick-char ${char ? '' : 'empty'}">${charDisplay || 'TBD'}${badge}</span>
-        </li>`;
-      }
+          ? '<span style="color:var(--red);font-weight:700">RANDOM SELECT</span>'
+          : (char || '<span style="color:var(--muted)">--</span>');
+        return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(42,42,74,0.15)">
+          <span style="min-width:70px;font-weight:600">${p}</span>
+          <span>${charDisplay}</span>
+        </div>`;
+      }).join('');
+    } else {
+      html += `<p style="color:var(--muted);font-size:13px">No picks yet</p>`;
     }
+
+    html += '</div>';
   }
-  html += '</ul></div>';
 
   el.innerHTML = html;
 }
